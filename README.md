@@ -4,7 +4,7 @@ This package provides a Python interface to lab equipment that is commonly
 used in Hailin Wang's lab at University of Oregon in the Department of
 Physics.  
 
-### Recommended packages
+### Required packages
 
 * numpy
 * pyVisa
