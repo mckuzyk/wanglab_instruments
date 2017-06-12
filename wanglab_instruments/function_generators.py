@@ -1,15 +1,19 @@
 import numpy as np
+def prop_doc(var):
+    s1 = '{} = property(get_{}, set_{})\n\n'.format(var, var, var)
+    s2 = 'See help on get_{} and set_{} functions for info.'.format(var, var)
+    return s1 + s2
 class Hp8647(object):
     """Initialize Hp8467 class object
 
     Args:
-        inst (object): Object for communication with an HP8647 
+        inst (object) : Object for communication with an HP8647 
             signal generator.  Typically a pyVisa Resource.
-        freq_unit (str, optional): Default frequency unit.  May be 
+        freq_unit (str, optional) : Default frequency unit.  May be 
             MHz, kHz, or Hz.  Defaults to MHz.
-        pow_unit (str, optional): Default power unit.  May be dBm or
+        pow_unit (str, optional) : Default power unit.  May be dBm or
             mV.  Defaults to dBm.
-        max_power (float): Maximum power the generator can be set to.
+        max_power (float) : Maximum power the generator can be set to.
             Defaults to 13 dBm.
 
     Examples:
@@ -29,78 +33,167 @@ class Hp8647(object):
     def __init__(self,inst,freq_unit='MHz', pow_unit='dBm', 
                     max_power=13):
         self.inst = inst
-        self._freq_unit = freq_unit
-        self._pow_unit = pow_unit
+        self.freq_unit = freq_unit
+        self.pow_unit = pow_unit
         self.max_power = max_power
 
     def get_freq_unit(self):
+        """
+        get_freq_unit(self):        
+
+        get the value of freq_unit        
+
+        Args:
+            None
+        
+        Returns:
+            self._freq_unit
+        """
         return self._freq_unit
 
     def set_freq_unit(self,freq):
+        """
+        set_freq_unit(self,freq):        
+
+        set the value of freq_unit        
+
+        Args:
+            freq (str) : { MHz | kHz | Hz }
+        
+        Returns:
+            None
+        """
         if freq in self.frequencies.keys():
-            return freq
+            self._freq_unit = freq
         else:
             if type(freq) == str:
-                raise ValueError('freq_unit = MHz|kHz|Hz')
+                raise ValueError('freq_unit = { MHz | kHz | Hz }')
             else:
                 raise TypeError('freq_unit must be str')
 
-    freq_unit = property(get_freq_unit, set_freq_unit)
+    freq_unit = property(get_freq_unit, set_freq_unit, doc =
+        prop_doc('freq_unit'))
 
     def get_pow_unit(self):
+        """
+        get_pow_unit(self):        
+
+        get the value of pow_unit        
+
+        Args:
+            None
+        
+        Returns:
+            self._pow_unit
+        """
         return self._pow_unit
 
     def set_pow_unit(self,power):
-        if power in self.power_units.keys():
-            return power
+        """
+        set_pow_unit(self,power):        
+
+        set the value of pow_unit        
+
+        Args:
+            power (str) : { dBm | mV }
+        
+        Returns:
+            None
+        """
+        if power in self.power_units:
+            self._pow_unit = power
         else:
             if type(power) == str:
                 raise ValueError('pow_unit = dBm|mV')
             else:
                 raise TypeError('pow_unit must be str')
 
-    pow_unit = property(get_pow_unit, set_pow_unit)
+    pow_unit = property(get_pow_unit, set_pow_unit, doc=prop_doc('pow_unit'))
 
     def __repr__(self):
         return 'Hp8647({!r}, {!r}, {!r}, max_power={!r})'.format(
         self.inst, self.freq_unit, self.pow_unit, self.max_power)
 
     def set_frequency(self,freq,unit=None):
-        """Set frequency.
+        """
+        set_frequency(self,freq,unit=None):        
+
+        set the value of frequency        
 
         Args:
-            freq (float): Frequency
-            unit (str, optional): Frequency unit.  Can be MHz, kHz, or Hz.  
-            If None, unit is set by self.freq_unit.
+            freq (float) : Frequency
+            unit (str, optional) : { MHz | kHz | Hz }
+        
+        Returns:
+            None
         """
         if unit is None:
             unit = self.freq_unit
         self.inst.write('FREQ:CW {} {}'.format(freq,unit))
 
     def get_frequency(self,unit=None):
-        """Get current frequency.
+        """
+        get_frequency(self,unit=None):        
+
+        get the value of frequency        
 
         Args:
-            unit (str, optional): Frequency unit used to report the 
-            frequency.  If none, unit is set by self.freq_unit.
+            unit (str, optional) : { MHz | kHz | Hz }
+        
         Returns:
-            Float: Frequency setting on instrument.
+            float: Value of frequency in specified unit
         """
         if unit is None:
             unit = self.freq_unit
         return float(self.inst.query('FREQ:CW?'))/self.frequencies[unit]
 
-    frequency = property(get_frequency,set_frequency)
+    frequency = property(get_frequency,set_frequency,
+        doc=prop_doc('frequency'))
 
     def set_rf_on(self,on):
+        """
+        set_rf_on(self,on):        
+
+        set the value of rf_on        
+
+        Args:
+            rf_on (bool) : True for on, False for off
+        
+        Returns:
+            None
+        """
         self.inst.write('OUTP:STAT {}'.format(on))
 
     def get_rf_on(self):
+        """
+        get_rf_on(self):        
+
+        get the value of rf_on        
+
+        Args:
+            None
+        
+        Returns:
+            1 for on, 0 for off
+        """
         return float(self.inst.query('OUTP:STAT?'))
 
-    rf_on = property(get_rf_on,set_rf_on)
+    rf_on = property(get_rf_on,set_rf_on, doc=prop_doc('rf_on'))
 
     def set_power(self,power,unit=None):
+        """
+        set_power(self,power,unit=None):        
+
+        set the value of power        
+
+        Args:
+            power (float) : rf output power.  If power exceeds max_pow, pow is
+                set to max_pow.
+            unit (str, optional) : { dBm | mV }
+        
+        Returns:
+            None
+        """
         if unit is None:
             unit = self.pow_unit
         if power > self.max_power:
@@ -111,9 +204,20 @@ class Hp8647(object):
         self.inst.write('POW:AMPL {}{}'.format(power,unit))
 
     def get_power(self):
+        """
+        get_power(self):        
+
+        get the value of power        
+
+        Args:
+            None
+        
+        Returns:
+            float: The current output power in specified units
+        """
         return float(self.inst.query('POW:AMPL?'))
 
-    power = property(get_power,set_power) 
+    power = property(get_power,set_power, doc=prop_doc('power')) 
 
 
 class Tek3102(object):
@@ -138,6 +242,16 @@ class Tek3102(object):
         >>> rm.list_resources()
         ('GPIB0::6::INSTR')
         >>> afg = Tek3102(rm.open_resource('GPIB0::6::INSTR'), channel=2)
+        # Check which output channel we are controlling
+        >>> afg.channel
+        2
+        # Check which waveform the function generator is outputting
+        >>> afg.waveform
+        'SIN'
+        # Set waveform to DC
+        >>> afg.waveform = 'DC'
+        >>> afg.waveform
+        'DC'
     """
 
     frequencies = {'MHz':1000000.,'kHz':1000.,'Hz':1.}
@@ -146,57 +260,138 @@ class Tek3102(object):
 
     def __init__(self,inst, freq_unit='MHz', volt_unit='V', channel=1):
         self.inst = inst
-        self._freq_unit = freq_unit
-        self._volt_unit = volt_unit
-        self._channel = channel
+        self.freq_unit = freq_unit
+        self.volt_unit = volt_unit
+        self.channel = channel
 
     def get_freq_unit(self):
+        """
+        get_freq_unit(self):        
+
+        get the value of freq_unit        
+
+        Args:
+            None
+        
+        Returns:
+            self._freq_unit
+        """
         return self._freq_unit
 
     def set_freq_unit(self,freq):
+        """
+        set_freq_unit(self,freq):        
+
+        set the value of freq_unit        
+
+        Args:
+            freq (str) : { MHz | kHz | Hz } 
+        
+        Returns:
+            None
+        """
         if freq in self.frequencies.keys():
-            return freq
+            self._freq_unit = freq
         else:
             if type(freq) == str:
-                raise ValueError('freq_unit = MHz|kHz|Hz')
+                raise ValueError('freq_unit = { MHz | kHz | Hz }')
             else:
                 raise TypeError('freq_unit must be str')
 
-    freq_unit = property(get_volt_unit, set_volt_unit)
+    freq_unit = property(get_freq_unit, set_freq_unit,
+        doc=prop_doc('freq_unit'))
 
     def get_volt_unit(self):
+        """
+        get_volt_unit(self):        
+
+        get the value of volt_unit        
+
+        Args:
+            None
+        
+        Returns:
+            self._volt_unit
+        """
         return self._volt_unit
 
     def set_volt_unit(self,volt):
+        """
+        set_volt_unit(self,volt):        
+
+        set the value of volt_unit        
+
+        Args:
+            volt (str) : { V | mV }
+        
+        Returns:
+            None
+        """
         if volt in self.voltages.keys():
-            return volt
+            self._volt_unit = volt
         else:
             if type(volt) == str:
-                raise ValueError('volt_unit = V|mV')
+                raise ValueError('volt_unit = { V | mV }')
             else:
                 raise TypeError('volt_unit must be str')
 
-    volt_unit = property(get_volt_unit, set_volt_unit)
+    volt_unit = property(get_volt_unit, set_volt_unit,
+        doc=prop_doc('volt_unit'))
 
     def get_channel(self):
+        """
+        get_channel(self):        
+
+        get the value of channel        
+
+        Args:
+            None
+        
+        Returns:
+            self._channel
+        """
         return self._channel
 
     def set_channel(self,channel):
-        if channel in self.channels.keys():
-            return channel
+        """
+        set_channel(self,channel):        
+
+        set the value of channel        
+
+        Args:
+            channel (int) : { 1 | 2 } 
+        
+        Returns:
+            None
+        """
+        if channel in self.channels:
+            self._channel = channel
         else:
             if type(channel) == int:
                 raise ValueError('channel = 1|2')
             else:
                 raise TypeError('channel must be int')
 
-    channel = property(get_channel, set_channel)
+    channel = property(get_channel, set_channel, doc=prop_doc('channel'))
 
     def __repr__(self):
-        return '{!r}, {!r}, {!r}, channel={!r}'.format(
+        return 'Tek3102({!r}, {!r}, {!r}, channel={!r})'.format(
         self.inst, self.freq_unit, self.volt_unit, self.channel)
 
     def set_frequency(self,freq,unit=None,channel=None):
+        """
+        set_frequency(self,freq,unit=None,channel=None):        
+
+        set the value of frequency        
+
+        Args:
+            freq (flot) : Frequency 
+            unit (str, optional) : { MHz | kHz | Hz }
+            channel (int, optional) : { 1 | 2 } 
+        
+        Returns:
+            None
+        """
         if unit is None:
             unit = self.freq_unit
         if channel is None:
@@ -204,6 +399,18 @@ class Tek3102(object):
         self.inst.write('SOUR{}:FREQ {}{}'.format(channel,freq,unit))
 
     def get_frequency(self,unit=None,channel=None):
+        """
+        get_frequency(self,unit=None,channel=None):        
+
+        get the value of frequency        
+
+        Args:
+            unit (str, optional) : { MHz | kHz | Hz }
+            channel (, optional) : { 1 | 2 }
+        
+        Returns:
+            output frequency on specified channel in specified units
+        """
         if unit is None:
             unit = self.freq_unit
         if channel is None:
@@ -213,6 +420,19 @@ class Tek3102(object):
     frequency = property(get_frequency,set_frequency)
 
     def get_volt_low(self,channel=None,unit=None):
+        """
+        get_volt_low(self,channel=None,unit=None):        
+
+        get the value of volt_low, setting the minimum voltage on the waveform        
+
+        Args:
+            channel (int, optional) : { 1 | 2 }
+            unit (str, optional) : { V | mV }
+        
+        Returns:
+            float: Minimum voltage on output waveform on specified channel
+                with specified units.
+        """
         if channel is None:
             channel = self.channel
         if unit is None:
@@ -220,6 +440,19 @@ class Tek3102(object):
         return float(self.inst.query('SOUR{}:VOLT:LOW?'))
 
     def set_volt_low(self,v,channel=None,unit=None):
+        """
+        set_volt_low(self,v,channel=None,unit=None):        
+
+        set the value of volt_low        
+
+        Args:
+            v (float) : low voltage for output waveform
+            channel (int, optional) : { 1 | 2 }
+            unit (str, optional) : { V | mV }
+        
+        Returns:
+            None
+        """
         if channel is None:
             channel = self.channel
         if unit is None:
@@ -229,6 +462,18 @@ class Tek3102(object):
     vmin = property(get_volt_low,set_volt_low)
 
     def get_volt_high(self,channel=None,unit=None):
+        """
+        get_volt_high(self,channel=None,unit=None):        
+
+        get the value of volt_high, the max output voltage of the waveform     
+
+        Args:
+            channel (int, optional) : { 1 | 2 }
+            unit (str, optional) : { V | mV }
+        
+        Returns:
+            float: max output voltage of the waveform
+        """
         if channel is None:
             channel = self.channel
         if unit is None:
@@ -236,6 +481,19 @@ class Tek3102(object):
         return float(self.inst.query('SOUR{}:VOLT:HIGH?'))
 
     def set_volt_high(self,v,channel=None,unit=None):
+        """
+        set_volt_high(self,v,channel=None,unit=None):        
+
+        set the value of volt_high, the max output voltage for the waveform        
+
+        Args:
+            v (float) : max output voltage
+            channel (int, optional) : { 1 | 2 }
+            unit (str, optional) : { V | mV }
+        
+        Returns:
+            None
+        """
         if channel is None:
             channel = self.channel
         if unit is None:
@@ -245,6 +503,18 @@ class Tek3102(object):
     vmax = property(get_volt_high,set_volt_high)
 
     def get_volt_offset(self,channel=None,unit=None):
+        """
+        get_volt_offset(self,channel=None,unit=None):        
+
+        get the value of volt_offset, the voltage offset for the waveform        
+
+        Args:
+            channel (int, optional) : { 1 | 2 }
+            unit (str, optional) : { V | mV }
+        
+        Returns:
+            float: waveform offset voltage
+        """
         if channel is None:
             channel = self.channel
         if unit is None:
@@ -252,15 +522,41 @@ class Tek3102(object):
         return float(self.inst.query('SOUR{}:VOLT:OFFSET?'.format(channel)))
 
     def set_volt_offset(self,v,channel=None,unit=None):
+        """
+        set_volt_offset(self,v,channel=None,unit=None):        
+
+        set the value of volt_offset, the waveform offset voltage        
+
+        Args:
+            v (float) : waveform offset voltage
+            channel (int, optional) : { 1 | 2 }
+            unit (str, optional) : { V | mV }
+        
+        Returns:
+            None
+        """
         if channel is None:
             channel = self.channel
         if unit is None:
             unit = self.volt_unit
         self.inst.write('SOUR{}:VOLT:OFFSET {}{}'.format(channel,v,unit))
 
-    voffset = property(get_volt_offset,set_volt_offset)
+    voffset = property(get_volt_offset,set_volt_offset,
+        doc=prop_doc('voffset'))
 
     def output(self,on,channel=None):
+        """
+        output(self, on, channel=None)
+
+        Toggle the channel output on or off
+        
+        Args:
+            on (int) : 1 for on, 0 for off
+            channel(int, optional) : { 1 | 2 }
+            
+        Returns:
+            None
+        """
         if channel is None:
             channel = self.channel
         if on == 1:
@@ -268,30 +564,65 @@ class Tek3102(object):
         elif on == 0:
             self.inst.write('OUTPUT{} OFF'.format(channel))
         else:
-            print('on = 1 for on, on = 0 for out')
+            print('on = 1 for on, on = 0 for off')
 
     def get_waveform(self,channel=None):
-        """Valid waveforms:
-           SINusoid|SQUare|PULse|RAMP|PRNoise|DC|SINC|GAUSsian|LORentz|
-           ERISe|EDECay|HAVersine|USER[1]|USER2|USER3|USER4|EMEMory|EFILe
+        """
+        get_waveform(self,channel=None):        
+
+        get the value of waveform        
+        valid waveforms:
+           { SINusoid|SQUare|PULse|RAMP|PRNoise|DC|SINC|GAUSsian|LORentz|
+           ERISe|EDECay|HAVersine|USER[1]|USER2|USER3|USER4|EMEMory|EFILe }
+
+        Args:
+            channel (int, optional) : { 1 | 2 }
+        
+        Returns:
+            str: output waveform on specified channel
         """
         if channel is None:
             channel = self.channel
         return self.inst.query('SOUR{}:FUNCTION?'.format(channel))
 
     def set_waveform(self,wave,channel=None):
-        """Valid waveforms:
-           SINusoid|SQUare|PULse|RAMP|PRNoise|DC|SINC|GAUSsian|LORentz|
-           ERISe|EDECay|HAVersine|USER[1]|USER2|USER3|USER4|EMEMory|EFILe
+        """
+        set_waveform(self,wave,channel=None):        
+
+        set the value of waveform        
+        valid waveforms:
+           { SINusoid|SQUare|PULse|RAMP|PRNoise|DC|SINC|GAUSsian|LORentz|
+           ERISe|EDECay|HAVersine|USER[1]|USER2|USER3|USER4|EMEMory|EFILe }
+
+        Args:
+            wave (str) : one of valid waveforms
+            channel (int, optional) : { 1 | 2 }
+        
+        Returns:
+            None
         """
         if channel is None:
             channel = self.channel
         self.inst.write('SOUR{}:FUNCTION {}'.format(channel,wave))
 
-    waveform = property(get_waveform,set_waveform)
+    waveform = property(get_waveform,set_waveform, doc=prop_doc('waveform'))
 
     def transfer_waveform(self,wvfrm,location=None,channel=None):
-        # waveform must be integer values between 0 and 16382
+        """
+        transfer_waveform(self,wvfrm,location=None,channel=None)
+
+        Transfers user defined waveform to location, sets output channel to
+        the waveform.  Waveform must be integer values between 0 and 16382.
+
+        Args:
+            wvfrm (list, tuple, or array of type int) : Waveform data to be transfered.
+            location (str, optional) : location for transfer.  One of USER{1 |
+                2 | 3 | 4}.  Default to USER1
+            channel(int, optional) : { 1 | 2 }
+
+        Returns:
+            None
+        """
         if location is None:
             location = 'USER1'
         if channel is None:
@@ -308,62 +639,144 @@ class Tek3102(object):
         print('Function set to {}'.format(location))
 
     def get_burst(self,channel=None):
-        #returns 1 for on, 0 for off
+        """
+        get_burst(self,channel=None):        
+
+        get the value of burst.  1 if channel is set to burst mode, 0
+        otherwise.        
+
+        Args:
+            channel (int, optional) : { 1 | 2 }
+        
+        Returns:
+            int: 1 if set to burst, 0 otherwise
+        """
         if channel is None:
             channel = self.channel
         return self.inst.query('SOUR{}:BURST:STATE?'.format(channel))
 
     def set_burst(self,state,channel=None):
-        #state = 1 for on, 0 for off, may use strings 'on/off' as well
+        """
+        set_burst(self,state,channel=None):        
+
+        set the value of burst        
+
+        Args:
+            state (int) : 1 to turn burst mode on, 0 to turn off
+            channel (int, optional) : { 1 | 2 }
+        
+        Returns:
+            None
+        """
         if channel is None:
             channel = self.channel
         self.inst.write('SOUR{}:BURST:STATE {}'.format(channel,state))
 
-    burst = property(get_burst,set_burst)
+    burst = property(get_burst,set_burst,doc=prop_doc('burst'))
 
     def get_burst_cycles(self,channel=None):
         """
-        Returns 9.9E+37 if burst count is set to INFinity
+        get_burst_cycles(self,channel=None):        
+
+        get the value of burst_cycles        
+
+        Args:
+            channel (int, optional) : { 1 | 2 }
+        
+        Returns:
+            float: number of burst cycles.  9.9E+37 if burst count is set to
+            INFinity
         """
         if channel is None:
             channel = self.channel
-        return self.inst.query('SOUR{}:BURST:NCYCLES?'.format(channel))
+        return float(self.inst.query('SOUR{}:BURST:NCYCLES?'.format(channel)))
 
     def set_burst_cycles(self,cycles,channel=None):
         """
-        cycles = <cycles>|INFinity|MIN|MAX}
-        <cycles> ranges from 1 to 1,000,000
+        set_burst_cycles(self,cycles,channel=None):        
+
+        set the value of burst_cycles        
+
+        Args:
+            cycles (int or str) : int between 1 and 1,000,000 | INFinity | MIN
+                | MAX
+            channel (, optional) : 
+        
+        Returns:
+            None
         """
         if channel is None:
             channel = self.channel
         self.inst.write('SOUR{}:BURST:NCYCLES {}'.format(channel,cycles))
 
-    burst_cycles = property(get_burst_cycles,set_burst_cycles)
+    burst_cycles = property(get_burst_cycles,set_burst_cycles,
+        doc=prop_doc('burst_cycles'))
 
     def get_burst_mode(self,channel=None):
+        """
+        get_burst_mode(self,channel=None):        
+
+        get the value of burst_mode        
+
+        Args:
+            channel (int, optional) : { 1 | 2 }
+        
+        Returns:
+            str : burst mode
+        """
         if channel is None:
             channel = self.channel
         return self.inst.query('SOUR{}:BURST:MODE?'.format(channel))
 
     def set_burst_mode(self,mode,channel=None):
         """
-        mode = {TRIGgered|GATed}
+        set_burst_mode(self,mode,channel=None):        
+
+        set the value of burst_mode        
+
+        Args:
+            mode (str) : { TRIGered | GATed }
+            channel (int, optional) : { 1 | 2 }
+        
+        Returns:
+            None
         """
         if channel is None:
             channel = self.channel
         self.inst.write('SOUR{}:BURST:MODE {}'.format(channel,mode))
 
-    burst_mode = property(get_burst_mode,set_burst_mode)
+    burst_mode = property(get_burst_mode,set_burst_mode,
+        doc=prop_doc('burst_mode'))
 
     def get_trigger_source(self):
+        """
+        get_trigger_source(self):        
+
+        get the value of trigger_source        
+
+        Args:
+            None
+        
+        Returns:
+            str : { EXTernal | TIMed }
+        """
         return self.inst.query('TRIG:SOUR?')
 
     def set_trigger_source(self,source):
         """
-        source = {EXTernal,TIMed}
+        set_trigger_source(self,source):        
+
+        set the value of trigger_source        
         Note that TIMed is equivalent to 'internal' on the front panel
+
+        Args:
+            source (str) : { EXTernal | TIMed } 
+        
+        Returns:
+            None
         """
         self.inst.write('TRIG:SOUR {}'.format(source))
 
-    trigger_source = property(get_trigger_source,set_trigger_source)
+    trigger_source = property(get_trigger_source,set_trigger_source,
+        doc=prop_doc('trigger_source'))
 
