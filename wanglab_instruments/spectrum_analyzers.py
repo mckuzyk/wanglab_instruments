@@ -1,50 +1,122 @@
 import numpy as np
 from scipy.special import iv
 import math
+def prop_doc(var):
+    s1 = '{} = property(get_{}, set_{})\n\n'.format(var, var, var)
+    s2 = 'See help on get_{} and set_{} functions for info.'.format(var, var)
+    return s1 + s2
 class Tek5103(object):
     """
-    Class for the Textronix 5103B real-time spectrum analyzer.  To creat an
-    instance of the class, one must pass an instrument object.  This is most
-    often done with pyvisa.  For example:
+    Initialize Tek5103 class object
 
-    import visa
-    import spectrum_analyzers
-    rm=visa.ResourceManager()
-    rsa=spectrum_analzyers.tex5103(rm.open_resource(address))
+    Args:
+        inst (object) : Object for communication with a Tek5103 spectrum
+            analyzer.  Typically a pyVisa Resource.
+        freq_unit (str, optional) : Default frequency unit.  May be 
+            { MHz | kHz | Hz }.  Default is MHz.
+        time_unit (str, optional) : Default time unit.  May be
+            { s | ms | us | ns }.  Default is us.
 
-    In this example, address is the appropriate string to pass to pyvisa in an
-    open_resource() call, and rsa is now an instance of the class tex5103.  In
-    the Wang lab, the tex5103 is connected via GPIB and set to address 1.  The
-    string address is then 'GPIB0::1::INSTR'.  See the pyvisa documentation
-    for detals.
-
-    The tex5103 class initializes the default frequency and time units to
-    megahertz and microseconds respectively.  These units are stored as
-    strings in the variables self.freq_unit and self.time_unit.  The
-    case-sensitive unit options are:
-
-    self.freq_unit=('Hz','kHz','MHz','GHz')
-    self.time_unit=('s','ms','us','ns')
-
-    Calls to properties, e.g. self.center_frequency, always use the current
-    values of self.freq_unit and self.time_unit.  If you wish to keep the
-    default parameters, but wish to get or set a property in another unit
-    choice, that can be done by calling the corresponding function.  
-
-    self.center_freq=50 #Sets center frequency to 50 MHz (assuming
-                        #self.freq_unit='MHz')
-    self.set_center_freq(1,'GHz') #Sets center frequency to 1 GHz without
-                                  #changing the default frequency unit.
-    self.freq_unit='GHz'    #Sets default frequency unit to GHz
-    self.center_freq=1      #Sets center frequency to 1 GHz.
-    """ 
+    Examples:
+        # Tek5103 spectrum analyzer on GPIB channel 1.
+        >>> from wanglab_instruments.function_generators import Tek5103
+        >>> import visa
+        >>> rm = visa.ResourceManager()
+        >>> rm.list_resources()
+        ('GPIB0::1::INSTR')
+        >>> rsa = Tek5103(rm.open_resource('GPIB0::1::INSTR'), time_unit='ns')
+        >>> rsa.time_unit
+        'ns'
+        # Retrieve currently displayed waveform on channel 1
+        >>> t, y = rsa.fetch_spectrum(1)
+        """
 
     frequencies={'Hz':1.,'kHz':1000.,'MHz':1000000.,'GHz':1000000000.}
     times={'s':1.,'ms':.001,'us':.000001,'ns':.000000001}
-    def __init__(self,inst):
-        self.inst=inst
-        self.freq_unit='MHz'
-        self.time_unit='us'
+
+    def __init__(self, inst, freq_unit = 'MHz', time_unit = 'us'):
+        self.inst = inst
+        self.freq_unit = freq_unit
+        self.time_unit = time_unit
+
+    def get_freq_unit(self):
+        """
+        get_freq_unit(self)
+
+        get the value of freq_unit
+
+        Args:
+            None
+
+        Returns:
+            str : self._freq_unit
+        """
+        return self._freq_unit
+
+    def set_freq_unit(self, freq):
+        """
+        set_freq_unit(self, freq)
+
+        set the value of freq_unit
+
+        Args:
+            freq (str) : { GHz | MHz | kHz | Hz }
+
+        Returns:
+            None
+        """
+        if freq in self.frequencies.keys():
+            self._freq_unit = freq
+        else:
+            if type(freq) == str:
+                raise ValueError('freq_unit = { GHz | MHz | kHz | Hz }')
+            else:
+                raise TypeError('freq_unit must be str')
+
+    freq_unit = property(get_freq_unit, set_freq_unit,
+        doc=prop_doc('freq_unit'))
+
+    def get_time_unit(self):
+        """
+        get_time_unit(self)
+
+        get the value of time_unit
+
+        Args:
+            None
+
+        Returns:
+            str : self._time_unit
+        """
+        return self._time_unit
+
+    def set_time_unit(self, time):
+        """
+        set_time_unit(self, time)
+
+        set the value of time_unit
+
+        Args:
+            time (str) : { s | ms | us | ns }
+
+        Returns:
+            None
+        """
+        if time in self.times.keys():
+            self._time_unit = time
+        else:
+            if type(time) == str:
+                raise ValueError('time_unit = { s | ms | us | ns }')
+            else:
+                raise TypeError('time_unit must be str')
+
+    time_unit = property(get_time_unit, set_time_unit,
+        doc=prop_doc('time_unit'))
+
+    def __repr__(self):
+        return 'Tek5103({!r}, {!r}, {!r})'.format(self.inst, self.freq_unit,
+        self.time_unit)
+
 
 #############################Data Transfer################################
 
@@ -58,6 +130,18 @@ class Tek5103(object):
         return self.inst.query_binary_values('FETCH:SPECTRUM:TRACE{}?'.format(trace))
 
     def fetch_spectrum(self,trace,unit=None):
+        """
+        fetch_spectrum(self, trace, unit=None)
+
+        fetch the current spectrum waveform from trace
+
+        Args:
+            trace (int) : { 1 | 2 | 3 | 4 } corresponding to trace to retrieve
+            unit (str, optional): { GHz | MHz | kHz | Hz } unit for frequency axis
+
+        Returns:
+            x, y : numpy arrays corresponding to the x-axis and the spectrum
+        """
         y=self.fetch_spectrum_trace(trace)
         x=np.linspace(self.get_start_freq(unit),self.get_stop_freq(unit),len(y))
         return x,np.array(y)
@@ -72,6 +156,22 @@ class Tek5103(object):
         return self.inst.query_binary_values('READ:SPECTRUM:TRACE{}?'.format(trace))
 
     def read_spectrum(self,trace,unit=None):
+        """
+        read_spectrum(self, trace, unit=None)
+
+        Acquires a new spectrum.
+        This differs from fetch_spectrum in that it causes the analyzer to
+        start a new acquisition, whereas fetch_spectrum retrieves whatever the
+        current waveform being displayed is.
+
+        Args:
+            trace (int) : { 1 | 2 | 3 | 4 } corresponding to trace to retrieve
+            unit (str, optional): { GHz | MHz | kHz | Hz } unit for frequency axis
+
+        Returns:
+            x, y : numpy arrays corresponding to the x-axis and the spectrum
+        """
+
         y=self.read_spectrum_trace(trace)
         x=np.linspace(self.get_start_freq(unit),self.get_stop_freq(unit),len(y))
         return x,np.array(y)
@@ -79,48 +179,141 @@ class Tek5103(object):
 #############################Frequency Commands################################
 
     def set_center_freq(self,freq,unit=None):
-        '''Input freq, unit='Hz','kHz','MHz','GHz' '''
+        """
+        set_center_freq(self,freq,unit=None):        
+
+        set the value of center_freq, the center analysis frequency        
+
+        Args:
+            freq (float) : center frequency 
+            unit (str, optional) : { GHz | MHz | kHz | Hz } frequency unit
+        
+        Returns:
+            None
+        """
         if unit is None:
             unit=self.freq_unit
         self.inst.write('SENS:SPEC:FREQ:CENT {}{}'.format(freq,unit))
+
     def get_center_freq(self,unit=None):
-        '''Returns frequency in units freq_unit=Hz,kHz,MHz,GHz.'''
+        """
+        get_center_freq(self,unit=None):        
+
+        get the value of center_freq        
+
+        Args:
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            float : Center analysis frequency in specified units
+        """
         if unit is None:
             unit=self.freq_unit
         return float(self.inst.query('SENS:SPEC:FREQ:CENT?'))/self.frequencies[unit]
-    center_freq = property(get_center_freq, set_center_freq)
+
+    center_freq = property(get_center_freq, set_center_freq,
+        doc=prop_doc('center_freq'))
 
     def set_freq_span(self,freq,unit=None):
-        '''Input freq, unit='Hz','kHz','MHz','GHz' '''
+        """
+        set_freq_span(self,freq,unit=None):        
+
+        set the value of freq_span, the frequency span for analysis.  If the
+        span is greater than 25 MHz, the analyzer is swept instead of
+        real-time.        
+
+        Args:
+            freq (float) : Frequency span
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            None
+        """
         if unit is None:
             unit=self.freq_unit
         self.inst.write('SENS:SPEC:FREQ:SPAN {}{}'.format(freq,unit))
+
     def get_freq_span(self,unit=None):
-        '''Returns frequency in Hz'''
+        """
+        get_freq_span(self,unit=None):        
+
+        get the value of freq_span, the analysis frequency span  
+
+        Args:
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            float : Analysis frequency span in specified units
+        """
         if unit is None:
             unit=self.freq_unit
         return float(self.inst.query('SENS:SPEC:FREQ:SPAN?'))/self.frequencies[unit]
-    freq_span=property(get_freq_span,set_freq_span)
+
+    freq_span=property(get_freq_span,set_freq_span,doc=prop_doc('freq_span'))
 
     def set_start_freq(self,freq,unit=None):
-        '''Input freq, unit='Hz','kHz','MHz','GHz' '''
+        """
+        set_start_freq(self,freq,unit=None):        
+
+        set the value of start_freq, the starting analysis frequency        
+
+        Args:
+            freq (float) : Starting analysis frequency
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            None
+        """
         if unit is None:
             unit=self.freq_unit
         self.inst.write('SENS:SPEC:FREQ:STARt {}{}'.format(freq,unit))
+
     def get_start_freq(self,unit=None):
-        '''Returns frequency in Hz'''
+        """
+        get_start_freq(self,unit=None):        
+
+        get the value of start_freq, the starting analysis frequency        
+
+        Args:
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            float : starting analysis frequency
+        """
         if unit is None:
             unit=self.freq_unit
         return float(self.inst.query('SENS:SPEC:FREQ:STARt?'))/self.frequencies[unit]
-    start_freq=property(get_start_freq,set_start_freq)
+
+    start_freq=property(get_start_freq,set_start_freq,doc=prop_doc('start_freq'))
 
     def set_stop_freq(self,freq,unit=None):
-        '''Input freq, unit='Hz','kHz','MHz','GHz' '''
+        """
+        set_stop_freq(self,freq,unit=None):        
+
+        set the value of stop_freq, the ending analysis frequency        
+
+        Args:
+            freq (float) : Ending analysis frequency
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            None
+        """
         if unit is None:
             unit=self.freq_unit
         self.inst.write('SENS:SPEC:FREQ:STOP {}{}'.format(freq,unit))
     def get_stop_freq(self,unit=None):
-        '''Returns frequency in Hz'''
+        """
+        get_stop_freq(self,unit=None):        
+
+        get the value of stop_freq, the ending analysis frequency        
+
+        Args:
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            float : Ending analysis frequency in specified units
+        """
         if unit is None:
             unit=self.freq_unit
         return float(self.inst.query('SENS:SPEC:FREQ:STOP?'))/self.frequencies[unit]
@@ -129,74 +322,189 @@ class Tek5103(object):
 #############################Detection Window################################
 
     def set_gate_length(self,length,unit=None,auto=False):
-        '''
-        Sets spectrum measure duration.  
-        set_spectrum_length(length, unit='s','ms','us','ns',auto=False)
-        setting auto=1 will cause the analyzer to auto set the duration. 
-        '''
+        """
+        set_gate_length(self,length,unit=None,auto=False):        
+
+        set the value of gate_length, the time window for analysis        
+
+        Args:
+            length (float) : gate length
+            unit (str, optional) : { s | ms | us | ns }
+            auto (bool, optional) : True to let analyzer automatically set
+                gate length
+        
+        Returns:
+            None
+        """
         if auto:
             self.inst.write('SENS:SPEC:LENG:AUTO')
         else:
             if unit is None:
                 unit=self.time_unit
             self.inst.write('SENS:SPEC:LENG {}{}'.format(length,unit))
+
     def get_gate_length(self,unit=None):
+        """
+        get_gate_length(self,unit=None):        
+
+        get the value of gate_length, the analysis time window        
+
+        Args:
+            unit (str, optional) : { s | ms | us | ns }
+        
+        Returns:
+            float : analysis time window in specified units
+        """
         if unit is None:
             unit=self.time_unit
         return float(self.inst.query('SENS:SPEC:LENG?'))/self.times[unit:]
+
     def get_gate_length_actual(self,unit=None):
+        """
+        get_gate_length_actual(self,unit=None):        
+
+        get the value of gate_length_actual, the actual analysis length, which
+        may differ from the specified length
+
+        Args:
+            unit (str, optional) : { s | ms | us | ns }
+        
+        Returns:
+            float : actual analysis time window in specified units
+        """
         if unit is None:
             unit=self.time_unit
         return float(self.inst.query('SENS:SPEC:LENG:ACT?'))/self.times[unit]
-    gate_length=property(get_gate_length_actual,set_gate_length)
+
+    gate_length=property(get_gate_length_actual,set_gate_length,doc=prop_doc('gate_length'))
 
     def set_gate_start(self,time,unit=None,auto=False):
-        '''
-        Sets spectrum offset time. set_spectrum_start(length,unit='s','ms'
-        ,'us','ns', auto=False)
-        auto=1 the analyzer will auto set the start time.
-        '''
+        """
+        set_gate_start(self,time,unit=None,auto=False):        
+
+        set the value of gate_start, the analysis window offset        
+
+        Args:
+            time (float) : analysis offset time
+            unit (str, optional) : { s | ms | us | ns }
+            auto (bool, optional) : True to let analyzer automatically set the
+                offset
+        
+        Returns:
+            None
+        """
         if auto:
             self.inst.write('SENS:SPEC:STAR:AUTO')
         else:
             if unit is None:
                 unit=self.time_unit
             self.inst.write('SENS:SPEC:STAR {}{}'.format(time,unit))
+
     def get_gate_start(self,unit=None):
-        '''Returns the spectrum offset time.'''
+        """
+        get_gate_start(self,unit=None):        
+
+        get the value of gate_start, the analysis window offset        
+
+        Args:
+            unit (str, optional) : { s | ms | us | ns }
+        
+        Returns:
+            float : analysis window offset time
+        """
         if unit is None:
             unit=self.time_unit
         return float(self.inst.query('SENS:SPEC:STAR?'))/self.times[unit]
-    gate_start=property(get_gate_start,set_gate_start)
+
+    gate_start=property(get_gate_start,set_gate_start,doc=prop_doc('gate_start'))
 
 #############################Trace Options################################
 
     def show_trace(self,trace):
+        """
+        show_trace(self, trace)
+
+        Toggle trace on.
+
+        Args:
+            trace (int) : trace to toggle on
+
+        Returns:
+            None
+        """
         self.inst.write('TRAC{}:SPEC ON'.format(trace))
+
     def trace_off(self,trace):
+        """
+        trace_off(self, trace)
+
+        Toggle trace off.
+
+        Args:
+            trace (int) : trace to toggle off
+
+        Returns:
+            None
+        """
         self.inst.write('TRAC{}:SPEC OFF'.format(trace))
 
     def set_averaging(self,trace,avg,count=True):
-        '''
+        """
+        set_averaging(self,trace,avg,count=True):        
+
+        set the number of averages
         count=1 causes a single acquisition of the analyzer to avg over the
         number of spectra specified by avg.  If count=0, a single acquisition
         will only collect a single run, and averaging will only work with the
         analyzer in continuous acquisition mode.
-        '''
+
+        Args:
+            trace (int) : trace to set averaging for
+            avg (int) : number of averages
+            count (bool, optional) : True to enable count
+        
+        Returns:
+            None
+        """
         self.inst.write('TRAC{}:SPEC:FUNC AVER'.format(trace))
         self.inst.write('TRAC{}:SPEC:AVER:COUN {}'.format(trace,avg))
         if count:
             self.inst.write('TRAC{}:SPEC:COUNT:ENAB 1'.format(trace))
         else:
             self.inst.write('TRAC{}:SPEC:COUNT:ENAB 0'.format(trace))
+
     def get_averaging(self,trace):
+        """
+        get_averaging(self,trace):        
+
+        get the value of averaging        
+
+        Args:
+            trace () : 
+        
+        Returns:
+        """
         return float(self.inst.query('TRAC{}:SPEC:AVER:COUN?'.format(trace)))
+
     def reset_averaging(self,trace):
+        """Reset the averaging on trace"""
         self.inst.write('TRAC{}:SPEC:AVER:RES'.format(trace))
 
 #############################Acquisition################################
 
     def acquisition_mode(self,mode):
+        """
+        acquisition_mode(self, mode)
+
+        specify the acquisition mode
+        
+        Args:
+            mode (str or int) : 0 or 'single' for single acquisistion, 1 or
+                'cont' or 'continuous' for continuous acquisition.
+
+        Returns:
+            None
+        """
         if mode==0 or mode=='single':
             self.inst.write('INIT:CONT OFF')
         elif mode==1 or mode=='cont' or mode=='continuous':
@@ -205,68 +513,203 @@ class Tek5103(object):
             \'cont\' or \'continuous\' for continuous')
 
     def acquire(self):
+        """start acquisistion"""
         self.inst.write('INIT')
 
 
     def restart_acquire(self):
+        """restart acquisition"""
         self.inst.write('SENSE:SPECTRUM:CLEAR:RESULTS')
 
     def set_acq_time(self,time):
+        """
+        set_acq_time(self,time):        
+
+        set the value of acq_time, the time duration for acquisition        
+
+        Args:
+            time (float) : acquisition time duration 
+        
+        Returns:
+            None
+        """
         self.inst.write('SENSE:ACQUISITION:SECONDS {}'.format(time))
 
     def get_acq_time(self):
+        """
+        get_acq_time(self):        
+
+        get the value of acq_time        
+
+        Args:
+            None
+        
+        Returns:
+            float : acquisition time
+        """
         return float(self.inst.query('SENSE:ACQUISITION:SECONDS?'))
 
-    acq_time = property(get_acq_time, set_acq_time)
+    acq_time = property(get_acq_time, set_acq_time,doc=prop_doc('acq_time'))
 
     def set_acq_samples(self,samples):
+        """
+        set_acq_samples(self,samples):        
+
+        set the value of acq_samples, the number of acquisition samples        
+
+        Args:
+            samples (int) : number of samples
+        
+        Returns:
+            None
+        """
         self.inst.write('SENSE:ACQUISITION:SAMPLES {}'.format(samples))
 
     def get_acq_samples(self):
+        """
+        get_acq_samples(self):        
+
+        get the value of acq_samples, the number of acquisition samples        
+
+        Args:
+            None
+        
+        Returns:
+            float : number of acquisition samples
+        """
         return float(self.inst.query('SENSE:ACQUISITION:SAMPLES?'))
 
-    acq_samples = property(get_acq_samples, set_acq_samples)
+    acq_samples = property(get_acq_samples,
+        set_acq_samples,doc=prop_doc('acq_samples'))
 
 #############################GPIB################################
 
     def set_gpib(self,address):
+        """
+        set_gpib(self,address):        
+
+        set the gpib address
+
+        Args:
+            address (int) : GPIB address
+        
+        Returns:
+            None
+        """
         self.inst.write('SYST:COMM:GPIB:SELF:ADDR {}'.format(address))
 
     def get_gpib(self):
+        """
+        get_gpib(self):        
+
+        get the GPIB address
+
+        Args:
+            None
+        
+        Returns:
+            float : GPIB address
+        """
         return float(self.inst.query('SYST:COMM:GPIB:SELF:ADDR?'))
 
-    gpib = property(get_gpib,set_gpib)
+    gpib = property(get_gpib,set_gpib,doc=prop_doc('gpib'))
 
 #############################RBW################################
 
     def set_rbw(self,rbw,unit=None):
+        """
+        set_rbw(self,rbw,unit=None):        
+
+        set the value of rbw, the resolution bandwidth        
+
+        Args:
+            rbw (float) : resolution bandwidth
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            None
+        """
         if unit is None:
             unit=self.freq_unit
         self.inst.write('SENS:SPEC:BAND:RES {}{}'.format(rbw,unit))
 
     def get_rbw(self,unit=None):
+        """
+        get_rbw(self,unit=None):        
+
+        get the value of rbw, the resolution bandwidth        
+
+        Args:
+            unit (str, optional) : { GHz | MHz | kHz | Hz }
+        
+        Returns:
+            float : resolution bandwidth for the current acquisition
+        """
         if unit is None:
             unit=self.freq_unit
         return float(self.inst.query('SENS:SPEC:BAND:RES:ACT?'))/self.frequencies[unit]
 
-    rbw = property(get_rbw,set_rbw)
+    rbw = property(get_rbw,set_rbw,doc=prop_doc('rbw'))
 
     def set_rbw_auto(self,auto):
+        """
+        set_rbw_auto(self,auto):        
+
+        set analyzer to automatically choose the resolution bandwidth
+
+        Args:
+            auto (bool) : True for auto
+        
+        Returns:
+            None
+        """
         self.inst.write('SENS:SPEC:BAND:RES:AUTO {}'.format(auto))
 
     def get_rbw_auto(self):
+        """
+        get_rbw_auto(self):        
+
+        get the value of rbw_auto, a bool specifying if the spectrum analyzer
+        automatically sets the resolution bandwidth
+
+        Args:
+            None
+        
+        Returns:
+            int : 1 for auto
+        """
         return int(self.inst.query('SENS:SPEC:BAND:AUTO?'))
 
-    rbw_auto = property(get_rbw_auto,set_rbw_auto)
+    rbw_auto = property(get_rbw_auto,set_rbw_auto,doc=prop_doc('rbw_auto'))
 
 
 class Tek5103Functions(Tek5103):
-    def __init__(self,inst):
+    def __init__(self,inst, freq_unit = 'MHz', time_unit = 'us'):
         self.inst=inst
-        self.freq_unit='MHz'
-        self.time_unit='us'
+        self.freq_unit=freq_unit
+        self.time_unit=time_unit
 
     def stitch_scans(self,start_freq,stop_freq,trace=None,scan_width=None):
+        """
+        stitch_scans(self, start_freq, stop_freq, trace=None, scan_width=None)
+
+        stitches together multiple scans, from start_freq to stop_freq,
+        returning a single x and y axis for the spectrum over the full range. 
+        This function allows one to use real-time analysis (25 MHz bandwidth
+        max) over a larger frequency range than 25 MHz.
+
+        Args:
+            start_freq (float) : starting frequency for scan
+            stop_freq (float) : ending frequency for scan
+            trace (int, optional) : trace to use for scan
+            scan_width(float, optional) : analysis frequency span to use for
+                the individual scans.  Defaults to using the current frequency
+                span.
+
+        Returns:
+            x, y : the frequency axis (x) and spectrum (y) as numpy arrays
+                with floating point values.
+        """
         if trace is None:
             trace=1
         if scan_width is None:
@@ -286,10 +729,23 @@ class Tek5103Functions(Tek5103):
         return x,y
 
     def step(self,step_size):
+        """Increment the center frequency"""
         self.center_freq+=step_size
         print('Center: {}{}'.format(self.center_freq,self.freq_unit))
 
     def enbw(self):
+        """
+        enbw(self)
+
+        Determine the effective noise bandwidth of the analyzer given its
+        current state.
+
+        Args:
+            None
+
+        Returns:
+            float : effective noise bandwidth in Hz
+        """
         pi = np.pi
         alpha = 16.7/pi
         N=self.acq_samples
