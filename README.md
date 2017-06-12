@@ -68,23 +68,26 @@ be run as follows:
 
 # Define lorentzian function for fitting
 >>> def lorentzian(x,x0,amp,width):
->>>    return 0.25*amp*width**2 / (x - x0)**2 + 0.25*width**2 # width is FWHM
+>>>    return 0.25*amp*width**2 / ((x - x0)**2 + 0.25*width**2) # width is FWHM
 
 # Collect data
->>> drive_frequency = np.linspace(90,110,50)
+>>> drive_frequency = np.linspace(90,110,500)
 >>> response = np.zeros(len(drive_frequency))
->>>     for i in len(drive_frequency):
+>>>     for i in range(len(drive_frequency)):
 >>>     hp.frequency = drive_frequency[i]
 >>>     x,y = rsa.read_spectrum(trace=1)
 >>>     response[i] = np.max(y)
 
 # Least squares fit
->>> popt, pcov = curve_fit(lorentzian, drive_frequency, response)
+>>> popt, pcov = curve_fit(lorentzian, drive_frequency, response,
+...     p0=[100,np.max(response),1])
 >>> FWHM = popt[-1]
 
 >>> plt.plot(drive_frequency, response, '.')
 >>> plt.plot(drive_frequency, lorentzian(drive_frequency, *popt))
 ```
 
-This short script, from start to finish, collects 50 data points, performs
-least squares fitting to the data, and plots the fit over the measured values.  
+This short script, from start to finish, collects 500 data points, performs
+least squares fitting to the data, and plots the fit over the measured
+values.  The whole process, from writing the script to fitted data and
+plots, takes only a few minutes.
