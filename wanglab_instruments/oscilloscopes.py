@@ -1,10 +1,43 @@
 import numpy as np
 
 class Tek7104(object):
+    """Initialize Tek7104 class object
+
+    Args:
+        inst (object) : Object for communication with a Tek7104 oscilloscope.
+        Typically a pyVisa Resource.
+
+    Examples:
+        # Assuming Tek7104 on GPIB channel 2
+        >>> from wanglab_instruments.oscilloscopes import Tek7104
+        >>> import visa
+        >>> rm = visa.ResourceManager()
+        >>> rm.list_resources()
+        ('GPIB0::2::INSTR')
+        >>> scope = Tek7104(rm.open_resource('GPIB0::2::INSTR'))
+        # retrieve waveform from scope channel 2
+        >>> x, y = scope.fetch_spectrum(2)
+    """
     def __init__(self,inst):
         self.inst = inst
 
+    def __repr__(self):
+        return 'Tek7104({!r})'.format(self.inst)
+
     def fetch_spectrum(self,trace,offset=False):
+        """
+        fetch_spectrum(self, trace, offset=False)
+
+        Return the x and y axes data from a channel (trace).
+
+        Args:
+            trace (int) : channel to retrieve
+            offset (bool) : if True, the y axis is offset from 0V according to
+                the offset set on the scope for viewing multiple waveforms
+
+        Returns:
+            tuple : numpy array of time axis, numpy array of volt axis
+        """
         self.inst.write('*CLS')
         self.inst.write('DAT:ENCDG ASCII')
         self.inst.write('DAT:SOU CH{}'.format(trace))
@@ -21,13 +54,48 @@ class Tek7104(object):
         y=[(float(val)-float(result[14]))*float(result[13]) for val in result[17].split(',')]
         if offset:
             y=[float(val)*float(result[13]) for val in result[17].split(',')]
-        return np.array(x),result[8].strip('"'),np.array(y),result[12].strip('"') #x,xunit,y,yunit
+        return np.array(x),np.array(y) #x,y
 
 class Tek3034(object):
+    """Initialize Tek3034 class object
+
+    Args:
+        inst (object) : Object for communication with a Tek7104 oscilloscope.
+        Typically a pyVisa Resource.
+
+    Examples:
+        # Assuming Tek3034 on GPIB channel 3
+        >>> from wanglab_instruments.oscilloscopes import Tek3034
+        >>> import visa
+        >>> rm = visa.ResourceManager()
+        >>> rm.list_resources()
+        ('GPIB0::3::INSTR')
+        >>> scope = Tek3034(rm.open_resource('GPIB0::2::INSTR'))
+        # retrieve waveform from scope channel 2
+        >>> x, y = scope.fetch_spectrum(2)
+    """
+
     def __init__(self,inst):
         self.inst = inst
 
+    def __repr__(self):
+        return 'Tek3034({!r})'.format(self.inst)
+
     def fetch_spectrum(self, trace, offset=False):
+        """
+        fetch_spectrum(self, trace, offset=False)
+
+        Return the x and y axes data from a channel (trace).
+
+        Args:
+            trace (int) : channel to retrieve
+            offset (bool) : if True, the y axis is offset from 0V according to
+                the offset set on the scope for viewing multiple waveforms
+
+        Returns:
+            tuple : numpy array of time axis, numpy array of volt axis
+        """
+
         self.inst.write('*CLS')
         self.inst.write('DAT:ENCDG ASCII')
         self.inst.write('DAT:SOU CH{}'.format(trace))
