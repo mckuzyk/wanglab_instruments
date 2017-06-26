@@ -3,6 +3,122 @@ def prop_doc(var):
     s1 = '{} = property(get_{}, set_{})\n\n'.format(var, var, var)
     s2 = 'See help on get_{} and set_{} functions for info.'.format(var, var)
     return s1 + s2
+
+class RSsmc100(object):
+    """ Initialize RSsmc100 class object.
+
+    This class controls the Rohde and Schwarz smc100 signal generator.
+    """
+
+    frequencies = {'GHz':1000000000,'MHz':1000000.,'kHz':1000.,'Hz':1.}
+    power_units = ('dBm','V','DBUV')
+    phase_units = ('DEGR','RAD')
+
+    def __init__(self,inst,pow_unit='dBm',freq_unit='MHz',phase_unit='RAD'):
+        self.inst = inst
+        self.pow_unit = pow_unit
+        self.phase_unit = phase_unit
+        self.freq_unit = freq_unit
+
+    def __repr__(self):
+        return 'RSsmc100({}, pow_unit = {}, freq_unit = {})'.format(
+            str(self.inst).split()[-1],
+            self.pow_unit,
+            self.freq_unit)
+
+    @property
+    def pow_unit(self):
+        """ pow_unit sets the power units.  Can be one of
+        {dBm | V | DBUV }.
+        """
+        return self.inst.query('UNIT:POW?').strip()
+
+    @pow_unit.setter
+    def pow_unit(self, value):
+        if value in self.power_units:
+            self.inst.write('UNIT:POW {}'.format(value))
+        else:
+            if type(value) == str:
+                raise ValueError('pow_unit = { dBm | V | DBUV }')
+            else:
+                raise TypeError('pow_unit must be str')
+    @property
+    def phase_unit(self):
+        """ phase_unit sets the phase units.  Can be one of
+        {RAD | DEGR }.
+        """
+        return self.inst.query('UNIT:ANGLE?').strip()
+
+    @phase_unit.setter
+    def phase_unit(self, value):
+        if value in self.phase_units:
+            self.inst.write('UNIT:ANGLE {}'.format(value))
+        else:
+            if type(value) == str:
+                raise ValueError('phase_unit = { RAD | DEGR }')
+            else:
+                raise TypeError('phase_unit must be str')
+
+    @property
+    def freq_unit(self):
+        """ freq_unit sets the frequency units.  Can be one of
+        {GHz | MHz | kHz | Hz}.
+        """
+        return self._freq_unit
+
+    @freq_unit.setter
+    def freq_unit(self, value):
+        if value in self.frequencies.keys():
+            self._freq_unit = value
+        else:
+            if type(value) == str:
+                raise ValueError('freq_unit = {}'.format(
+                    self.frequencies.keys()))
+            else:
+                raise TypeError('freq_unit must be str')
+
+    @property
+    def power(self):
+        return float(self.inst.query('POW?'))
+
+    @power.setter
+    def power(self, value):
+        self.inst.write('POW {}'.format(value))
+
+    @property
+    def freq(self):
+        return (float(self.inst.query('FREQ?'))
+            /self.frequencies[self.freq_unit])
+
+    @freq.setter
+    def freq(self, value):
+        self.inst.write('FREQ {} {}'.format(value,self.freq_unit))
+
+    @property
+    def phase(self):
+        return float(self.inst.query('PHASE?'))
+
+    @phase.setter
+    def phase(self, value):
+        self.inst.write('PHASE {}'.format(value))
+
+    @property
+    def zero_phase(self):
+        self.inst.write('PHASE:REF')
+
+    def state(self, write_to=None):
+        s = []
+        s.append('Power: {} {}\n'.format(self.power,self.pow_unit))
+        s.append('Frequency: {} {}\n'.format(self.freq,self.freq_unit))
+        s.append('Phase: {} {}\n'.format(self.phase,self.phase_unit))
+        if write_to is None:
+            for line in s:
+                print(line,end='')
+        else:
+            with open(write_to,'w') as f:
+                for line in s:
+                    f.write(line)
+
 class Hp8647(object):
     """Initialize Hp8467 class object
 
