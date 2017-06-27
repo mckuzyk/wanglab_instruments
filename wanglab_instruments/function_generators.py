@@ -129,7 +129,7 @@ class RSsmc100(object):
 
     def state(self, write_to=None, name=None):
         s = []
-        s.append('{}\n'.format(timestamp()))
+        s.append('\n{}\n'.format(timestamp()))
         if name is not None:
             s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
@@ -362,7 +362,7 @@ class Hp8647(object):
 
     def state(self, write_to=None):
         s = []
-        s.append('{}\n'.format(timestamp()))
+        s.append('\n{}\n'.format(timestamp()))
         if name is not None:
             s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
@@ -940,9 +940,9 @@ class Tek3102(object):
 
     def state(self, write_to=None, name=None):
         s = []
-        s.append('nickname: {}\n'.format(timestamp()))
+        s.append('\n{}\n'.format(timestamp()))
         if name is not None:
-            s.append('{}\n'.format(name))
+            s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
         s.append('Frequency: {} {}\n'.format(self.frequency,self.freq_unit))
         if write_to is None:
