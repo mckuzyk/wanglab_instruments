@@ -1,8 +1,12 @@
 import numpy as np
+import datetime
 def prop_doc(var):
     s1 = '{} = property(get_{}, set_{})\n\n'.format(var, var, var)
     s2 = 'See help on get_{} and set_{} functions for info.'.format(var, var)
     return s1 + s2
+
+def timestamp():
+    return datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
 
 class RSsmc100(object):
     """ Initialize RSsmc100 class object.
@@ -62,7 +66,13 @@ class RSsmc100(object):
     @property
     def freq_unit(self):
         """ freq_unit sets the frequency units.  Can be one of
-        {GHz | MHz | kHz | Hz}.
+        {GHz | MHz | kHz | Hz}.  
+        
+        Note that the smc100 works exclusively with Hz.  The freq_unit
+        property looks up other units from a dictionary and does a
+        conversion from Hz to the proper units.  This is opposed to the
+        pow_unit and phase_unit, which are stored in the scm100.  In those
+        cases, getting and setting actually make calls to the smc100.
         """
         return self._freq_unit
 
@@ -106,8 +116,23 @@ class RSsmc100(object):
     def zero_phase(self):
         self.inst.write('PHASE:REF')
 
-    def state(self, write_to=None):
+    @property
+    def rf_on(self):
+        return int(self.inst.query('OUTP?'))
+
+    @rf_on.setter
+    def rf_on(self, value):
+        if value == 0 or value == 1:
+            self.inst.write('OUTP {}'.format(value))
+        else:
+            raise ValueError('rf_on takes 0 for off, 1 for on')
+
+    def state(self, write_to=None, name=None):
         s = []
+        s.append('{}\n'.format(timestamp()))
+        if name is not None:
+            s.append('nickname: {}\n'.format(name))
+        s.append('{}'.format(self.inst.query('*IDN?')))
         s.append('Power: {} {}\n'.format(self.power,self.pow_unit))
         s.append('Frequency: {} {}\n'.format(self.freq,self.freq_unit))
         s.append('Phase: {} {}\n'.format(self.phase,self.phase_unit))
@@ -115,7 +140,7 @@ class RSsmc100(object):
             for line in s:
                 print(line,end='')
         else:
-            with open(write_to,'w') as f:
+            with open(write_to,'a') as f:
                 for line in s:
                     f.write(line)
 
@@ -334,6 +359,23 @@ class Hp8647(object):
         return float(self.inst.query('POW:AMPL?'))
 
     power = property(get_power,set_power, doc=prop_doc('power')) 
+
+    def state(self, write_to=None):
+        s = []
+        s.append('{}\n'.format(timestamp()))
+        if name is not None:
+            s.append('nickname: {}\n'.format(name))
+        s.append('{}'.format(self.inst.query('*IDN?')))
+        s.append('Power: {} {}\n'.format(self.power,self.pow_unit))
+        s.append('Frequency: {} {}\n'.format(self.frequency,self.freq_unit))
+        if write_to is None:
+            for line in s:
+                print(line,end='')
+        else:
+            with open(write_to,'a') as f:
+                for line in s:
+                    f.write(line)
+
 
 
 class Tek3102(object):
@@ -895,4 +937,20 @@ class Tek3102(object):
 
     trigger_source = property(get_trigger_source,set_trigger_source,
         doc=prop_doc('trigger_source'))
+
+    def state(self, write_to=None, name=None):
+        s = []
+        s.append('nickname: {}\n'.format(timestamp()))
+        if name is not None:
+            s.append('{}\n'.format(name))
+        s.append('{}'.format(self.inst.query('*IDN?')))
+        s.append('Frequency: {} {}\n'.format(self.frequency,self.freq_unit))
+        if write_to is None:
+            for line in s:
+                print(line,end='')
+        else:
+            with open(write_to,'a') as f:
+                for line in s:
+                    f.write(line)
+
 
