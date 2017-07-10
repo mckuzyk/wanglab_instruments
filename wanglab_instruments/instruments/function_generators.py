@@ -130,13 +130,14 @@ class RSsmc100(object):
 
     def state(self, write_to=None, name=None):
         s = []
-        s.append('\n{}\n'.format(timestamp()))
+        s.append('{}\n'.format(timestamp()))
         if name is not None:
             s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
         s.append('Power: {} {}\n'.format(self.power,self.pow_unit))
         s.append('Frequency: {} {}\n'.format(self.freq,self.freq_unit))
         s.append('Phase: {} {}\n'.format(self.phase,self.phase_unit))
+        s.append('----------\n')
         if write_to is None:
             for line in s:
                 print(line,end='')
@@ -363,12 +364,13 @@ class Hp8647(object):
 
     def state(self, write_to=None):
         s = []
-        s.append('\n{}\n'.format(timestamp()))
+        s.append('{}\n'.format(timestamp()))
         if name is not None:
             s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
         s.append('Power: {} {}\n'.format(self.power,self.pow_unit))
         s.append('Frequency: {} {}\n'.format(self.frequency,self.freq_unit))
+        s.append('----------\n')
         if write_to is None:
             for line in s:
                 print(line,end='')
@@ -941,11 +943,13 @@ class Tek3102(object):
 
     def state(self, write_to=None, name=None):
         s = []
-        s.append('\n{}\n'.format(timestamp()))
+        s.append('{}\n'.format(timestamp()))
         if name is not None:
             s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
+        s.append('Channel: {}\n'.format(self.channel))
         s.append('Frequency: {} {}\n'.format(self.frequency,self.freq_unit))
+        s.append('----------\n')
         if write_to is None:
             for line in s:
                 print(line,end='')
