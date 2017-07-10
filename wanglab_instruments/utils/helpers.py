@@ -1,7 +1,7 @@
 import numpy as np
 import datetime
 
-def timestampe():
+def timestamp():
     return datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
 
 def unlog(y):
