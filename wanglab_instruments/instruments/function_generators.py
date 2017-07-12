@@ -950,7 +950,13 @@ class Tek3102(object):
             s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
         s.append('Channel: {}\n'.format(self.channel))
+        s.append('Output: {}\n'.format(
+            self.inst.query('OUTPUT{}?'.format(self.channel))))
         s.append('Frequency: {} {}\n'.format(self.frequency,self.freq_unit))
+        s.append('Vpp: {} {}\n'.format(self.vmax - self.vmin, 
+            self.volt_unit))
+        s.append('DC offset: {} {}\n'.format(self.voffset, self.volt_unit))
+        s.append('Waveform: {}\n'.format(self.waveform))
         s.append('----------\n')
         if write_to is None:
             for line in s:
