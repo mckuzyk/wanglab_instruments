@@ -1,14 +1,21 @@
 import numpy as np
+from scipy.optimize import curve_fit
 import datetime
+
+###################### Timestamp ###############################
 
 def timestamp():
     return datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+
+###################### linear<-->log ###############################
 
 def unlog(y):
     return 10**(y/10)
 
 def log(y):
     return 10*np.log10(y)
+
+###################### Functional Forms ###############################
 
 def h(t):
     """
@@ -49,6 +56,13 @@ def lorentzian(x,x0=0,y0=0,amp=1,fwhm=1):
     """
     return y0 + 0.25*amp*fwhm**2/((x-x0)**2 + 0.25*fwhm**2)
 
+def lorentzian_triplet(x,x0=0,y0=0,amp=1,fwhm=.2,
+                        xl=-1,ampl=1,fwhml=.2,
+                        xr=1,ampr=1,fwhmr=.2):
+    return lorentzian(x,xl,y0,ampl,fwhml) + \
+           lorentzian(x,x0,0,amp,fwhm) + \
+           lorentzian(x,xr,0,ampr,fwhmr) 
+
 def line(x,m=1,b=0):
     """
     line(x, m, b)
@@ -68,17 +82,30 @@ def line(x,m=1,b=0):
     """
     return m*x + b
 
+###################### Fitting ###############################
+
+def fit_lorentzian(x_data, y_data, x0=None, y0=None, amp=None, fwhm=None):
+    if x0 is None:
+        x0 = x_data[np.argmax(y_data)]
+    if y0 is None:
+        y0 = np.amin(y_data)
+    if amp is None:
+        amp = np.amax(y_data) - np.amin(y_data)
+    if fwhm is None:
+        fwhm = 0.2*np.abs((x_data[-1] - x_data[0]))
+    popt, pcov = curve_fit(lorentzian, x_data, y_data, [x0,y0,amp,fwhm])
+    return popt, pcov
+
+def fit_lorentzian_triplet():
+    pass
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    from scipy.optimize import curve_fit
-    x = np.linspace(-2,2,100)
-    vals = (1,1,.5,2)
-    y1 = lorentzian(x,*vals)
-    popt,pcov = curve_fit(lorentzian,x,y1)
+    x = np.linspace(-2,2,500)
+    vals = (0,1,1,.1,-1,.5,.02,1.1,.5,.05)
+    y1 = lorentzian_triplet(x,*vals)
+    popt, pcov = fit_lorentzian(x,y1,y0=1)
     print(popt)
-    plt.plot(x,y1,'.')
-    plt.plot(x,2-y1)
-    plt.plot(x,lorentzian(x,*popt),linewidth=2,alpha=0.8)
-    plt.plot(x,line(x))
-    plt.plot(x,exp_decay(x))
+    plt.plot(x,y1)
+    plt.plot(x,lorentzian(x,*popt),linewidth=2)
     plt.show()
