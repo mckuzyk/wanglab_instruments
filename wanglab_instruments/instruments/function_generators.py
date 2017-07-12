@@ -145,6 +145,7 @@ class RSsmc100(object):
             with open(write_to,'a') as f:
                 for line in s:
                     f.write(line)
+        return ''.join(s)
 
 class Hp8647(object):
     """Initialize Hp8467 class object
@@ -362,7 +363,7 @@ class Hp8647(object):
 
     power = property(get_power,set_power, doc=prop_doc('power')) 
 
-    def state(self, write_to=None):
+    def state(self, write_to=None, name=None):
         s = []
         s.append('{}\n'.format(timestamp()))
         if name is not None:
@@ -378,6 +379,7 @@ class Hp8647(object):
             with open(write_to,'a') as f:
                 for line in s:
                     f.write(line)
+        return ''.join(s)
 
 
 
@@ -957,5 +959,6 @@ class Tek3102(object):
             with open(write_to,'a') as f:
                 for line in s:
                     f.write(line)
+        return ''.join(s)
 
 
