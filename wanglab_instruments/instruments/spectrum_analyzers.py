@@ -1,10 +1,14 @@
 import numpy as np
 from scipy.special import iv
 import math
+import datetime
 def prop_doc(var):
     s1 = '{} = property(get_{}, set_{})\n\n'.format(var, var, var)
     s2 = 'See help on get_{} and set_{} functions for info.'.format(var, var)
     return s1 + s2
+
+def timestamp():
+    return datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
 class Tek5103(object):
     """
     Initialize Tek5103 class object
@@ -681,6 +685,26 @@ class Tek5103(object):
         return int(self.inst.query('SENS:SPEC:BAND:AUTO?'))
 
     rbw_auto = property(get_rbw_auto,set_rbw_auto,doc=prop_doc('rbw_auto'))
+
+    def state(self, trace, write_to=None):
+        s = []
+        s.append('{}\n'.format(timestamp()))
+        s.append('Center Frequency: {} {}\n'.format(self.center_freq, 
+            self.freq_unit))
+        s.append('Span: {} {}\n'.format(self.freq_span, self.freq_unit))
+        s.append('RBW: {} {}\n'.format(self.rbw, self.freq_unit))
+        s.append('Averaging: {}\n'.format(self.get_averaging(trace)))
+        s.append('Acquisition Time: {} S\n'.format(self.acq_time))
+        s.append('Acquisition Samples: {}\n'.format(self.acq_samples))
+        if write_to is None:
+            for line in s:
+                print(line,end='')
+        else:
+            with open(write_to,'a') as f:
+                for line in s:
+                    f.write(line)
+        return ''.join(s)
+
 
 
 class Tek5103Functions(Tek5103):
