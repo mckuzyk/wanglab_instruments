@@ -96,16 +96,71 @@ def fit_lorentzian(x_data, y_data, x0=None, y0=None, amp=None, fwhm=None):
     popt, pcov = curve_fit(lorentzian, x_data, y_data, [x0,y0,amp,fwhm])
     return popt, pcov
 
-def fit_lorentzian_triplet():
-    pass
+def fit_lorentzian_triplet(x_data, y_data, x0=None, y0=None, amp=None,
+    fwhm=None, xl=None, ampl=None, fwhml=None,
+    xr=None, ampr=None,fwhmr=None):
+    # If all paramaters are None, assume a large center peak with small,
+    # resolved sidebands
+    if not any([x0,y0,amp,fwhm,xl,ampl,fwhml,xr,ampr,fwhmr]):
+        x0 = x_data[np.argmax(y_data)]
+        y0 = np.amin(y_data)
+        amp = np.amax(y_data) - np.amin(y_data)
+        fwhm = 0.2*np.abs((x_data[-1] - x_data[0]))
+        _popt,_pcov = fit_lorentzian(x_data,y_data,*[x0,y0,amp,fwhm])
+        _x = np.array(x_data)
+        _y = np.array(y_data)
+        _xl_indices = _x < (_popt[0] - 2*np.abs(_popt[-1]))
+        _xr_indices = _x > (_popt[0] + 2*np.abs(_popt[-1]))
+        _xl = _x[_xl_indices]
+        _xr = _x[_xr_indices]
+        _yl = _y[_xl_indices]
+        _yr = _y[_xr_indices]
+        xl = _xl[np.argmax(_yl)]
+        xr = _xr[np.argmax(_yr)]
+        ampl = np.amax(_yl) - np.amin(_yl)
+        ampr = np.amax(_yr) - np.amin(_yr)
+        _poptr,_pcovr = fit_lorentzian(_xr,_yr,x0=xr,amp=ampr,fwhm=_popt[-1])
+        _poptl,_pcovl = fit_lorentzian(_xl,_yl,x0=xl,amp=ampl,fwhm=_popt[-1])
+        popt, pcov = curve_fit(lorentzian_triplet,x_data,y_data,
+            [_popt[0],_popt[1],_popt[2],_popt[3],
+            _poptl[0],_poptl[2],_poptl[3],
+            _poptr[0],_poptr[2],_poptr[3]])
+        return popt, pcov
 
+    else:
+        if x0 is None:
+            x0 = x_data[np.argmax(y_data)]
+        if y0 is None:
+            y0 = np.amin(y_data)
+        if amp is None:
+            amp = np.amax(y_data) - np.amin(y_data)
+        if fwhm is None:
+            fwhm = 0.05*np.abs((x_data[-1] - x_data[0]))
+        if xl is None:
+            xl = x0 - 0.25*np.abs(x_data[-1] - x_data[0])
+        if ampl is None:
+            ampl = .1*amp
+        if fwhml is None:
+            fwhml = fwhm
+        if xr is None:
+            xr = x0 - 0.25*np.abs(x_data[-1] - x_data[0])
+        if ampr is None:
+            ampr = .1*amp
+        if fwhmr is None:
+            fwhmr = fwhm
+        popt, pcov = curve_fit(lorentzian_triplet,x_data,y_data,
+            [x0,y0,amp,fwhm,xl,ampl,fwhml,xr,ampr,fwhmr])
+        return popt, pcov
+
+    
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     x = np.linspace(-2,2,500)
-    vals = (0,1,1,.1,-1,.5,.02,1.1,.5,.05)
+    vals = (0,1,1,.1,-.5,.1,.02,.5,.1,.05)
     y1 = lorentzian_triplet(x,*vals)
-    popt, pcov = fit_lorentzian(x,y1,y0=1)
+    popt, pcov = fit_lorentzian_triplet(x,y1)
     print(popt)
     plt.plot(x,y1)
-    plt.plot(x,lorentzian(x,*popt),linewidth=2)
+    plt.plot(x,lorentzian_triplet(x,*popt),linewidth=2)
     plt.show()
+    
