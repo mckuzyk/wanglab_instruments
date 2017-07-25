@@ -16,7 +16,8 @@ instantiated with a communication object that can send and receive bits from
 the instrument.  The most common way to set up communication is with a pyVisa
 Resource object.  This is the only type of communication that this package has
 been tested with, but it should work just as well with other types of
-communication, for example pySerial.
+communication, for example pySerial, with a few wrapper functions to match
+the syntax used by pyVisa (i.e. write, query, etc.).
 
 The standard way to start a session is to:
 1. Import wanglab_instruments and pyVisa.
