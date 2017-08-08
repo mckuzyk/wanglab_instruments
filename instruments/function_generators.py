@@ -950,7 +950,7 @@ class Tek3102(object):
             s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
         s.append('Channel: {}\n'.format(self.channel))
-        s.append('Output: {}\n'.format(
+        s.append('Output: {}'.format(
             self.inst.query('OUTPUT{}?'.format(self.channel))))
         s.append('Frequency: {} {}\n'.format(self.frequency,self.freq_unit))
         s.append('Vpp: {} {}\n'.format(self.vmax - self.vmin, 
