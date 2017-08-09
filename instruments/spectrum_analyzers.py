@@ -736,7 +736,7 @@ class Tek5103(object):
         s.append('Averaging: {}\n'.format(self.get_averaging(trace)))
         s.append('Acquisition Time: {} S\n'.format(self.acq_time))
         s.append('Acquisition Samples: {}\n'.format(self.acq_samples))
-        s.append('ENBW: {} Hz\n'.format(self.ENBW()))
+        s.append('ENBW: {} Hz\n'.format(self.enbw()))
         if write_to is None:
             for line in s:
                 print(line,end='')
