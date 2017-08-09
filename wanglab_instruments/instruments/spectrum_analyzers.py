@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from scipy.special import iv
 import math
@@ -686,9 +687,48 @@ class Tek5103(object):
 
     rbw_auto = property(get_rbw_auto,set_rbw_auto,doc=prop_doc('rbw_auto'))
 
-    def state(self, trace, write_to=None):
+    def enbw(self):
+        """
+        enbw(self)
+
+        Determine the effective noise bandwidth of the analyzer given its
+        current state.
+
+        Args:
+            None
+
+        Returns:
+            float : effective noise bandwidth in Hz
+        """
+        pi = np.pi
+        alpha = 16.7/pi
+        N=self.acq_samples
+        tau=self.acq_time
+        fs=N/tau
+        j=np.arange(N)
+        def kaiser(j):
+            z = 2.*j/N - 1.
+            return iv(0,pi*alpha*np.sqrt(1-z**2))/iv(0,pi*alpha)
+        def S1(x):
+            sum = 0
+            for i in x:
+                sum = sum+i
+            return sum
+
+        def S2(x):
+            sum = 0
+            for i in x:
+                sum = sum+i**2
+            return sum
+        x=kaiser(j)
+        return fs*S2(x)/S1(x)**2
+
+    def state(self, trace, write_to=None, name=None):
         s = []
         s.append('{}\n'.format(timestamp()))
+        if name is not None:
+            s.append('nickname: {}\n'.format(name))
+        s.append('{}'.format(self.inst.query('*IDN?')))
         s.append('Center Frequency: {} {}\n'.format(self.center_freq, 
             self.freq_unit))
         s.append('Span: {} {}\n'.format(self.freq_span, self.freq_unit))
@@ -696,6 +736,7 @@ class Tek5103(object):
         s.append('Averaging: {}\n'.format(self.get_averaging(trace)))
         s.append('Acquisition Time: {} S\n'.format(self.acq_time))
         s.append('Acquisition Samples: {}\n'.format(self.acq_samples))
+        s.append('ENBW: {} Hz\n'.format(self.enbw()))
         if write_to is None:
             for line in s:
                 print(line,end='')

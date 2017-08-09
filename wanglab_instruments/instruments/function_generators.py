@@ -600,7 +600,7 @@ class Tek3102(object):
             channel = self.channel
         if unit is None:
             unit = self.volt_unit
-        return float(self.inst.query('SOUR{}:VOLT:LOW?'))
+        return float(self.inst.query('SOUR{}:VOLT:LOW?'.format(channel)))
 
     def set_volt_low(self,v,channel=None,unit=None):
         """
@@ -641,7 +641,7 @@ class Tek3102(object):
             channel = self.channel
         if unit is None:
             unit = self.volt_unit
-        return float(self.inst.query('SOUR{}:VOLT:HIGH?'))
+        return float(self.inst.query('SOUR{}:VOLT:HIGH?'.format(channel)))
 
     def set_volt_high(self,v,channel=None,unit=None):
         """
@@ -950,7 +950,7 @@ class Tek3102(object):
             s.append('nickname: {}\n'.format(name))
         s.append('{}'.format(self.inst.query('*IDN?')))
         s.append('Channel: {}\n'.format(self.channel))
-        s.append('Output: {}\n'.format(
+        s.append('Output: {}'.format(
             self.inst.query('OUTPUT{}?'.format(self.channel))))
         s.append('Frequency: {} {}\n'.format(self.frequency,self.freq_unit))
         s.append('Vpp: {} {}\n'.format(self.vmax - self.vmin, 
