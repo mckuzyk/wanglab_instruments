@@ -109,10 +109,10 @@ def fit_lorentzian_triplet(x_data, y_data, x0=None, y0=None, amp=None,
         _popt,_pcov = fit_lorentzian(x_data,y_data,*[x0,y0,amp,fwhm])
         _x = np.array(x_data)
         _y = np.array(y_data) - lorentzian(_x,*_popt)
-#        _xl_indices = _x < (_popt[0] - 2*np.abs(_popt[-1]))
-#        _xr_indices = _x > (_popt[0] + 2*np.abs(_popt[-1]))
-        _xl_indices = _x < _popt[0]
-        _xr_indices = _x > _popt[0]
+        _xl_indices = _x < (_popt[0] - 1*np.abs(_popt[-1]))
+        _xr_indices = _x > (_popt[0] + 1*np.abs(_popt[-1]))
+#        _xl_indices = _x < _popt[0]
+#        _xr_indices = _x > _popt[0]
         _xl = _x[_xl_indices]
         _xr = _x[_xr_indices]
         _yl = _y[_xl_indices]
