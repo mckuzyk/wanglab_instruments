@@ -154,6 +154,21 @@ def fit_lorentzian_triplet(x_data, y_data, x0=None, y0=None, amp=None,
             [x0,y0,amp,fwhm,xl,ampl,fwhml,xr,ampr,fwhmr])
         return popt, pcov
 
+###################Optical Mode Analysis##########################
+
+def calibrate_x(x,y,eom_frequency,invert=False):
+    if invert:
+        y = -y
+    popt, pcov = fit_lorentzian_triplet(x,y)
+    x0,xl,xr = popt[0],popt[4],popt[-3]
+    xcal = (x - x0)/(xr - xl)*2*eom_frequency
+    return xcal
+
+def get_linewidth(x,y,invert=True,eom_frequency=eom.frequency):
+    xcal = calibrate_x(x,y,eom_frequency,invert)
+    popt, pcov = fit_lorentzian(xcal,y,x0=0) # Central peak at x=0 
+    return popt[-1]
+
     
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
