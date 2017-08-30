@@ -6,11 +6,29 @@ class SR844(object):
     def __init__(self,inst):
         self.inst = inst
 
+    def get_ref_mode(self):
+        '''get the reference mode (external (0) internal (1))'''
+        return int(self.inst.query('FMOD?'))
+
+    def set_ref_mode(self,mode):
+        '''set the reference mode (external (0) internal (1))'''
+        self.inst.write('FMOD {}'.format(mode))
+
+    ref_mode = property(get_ref_mode, set_ref_mode)
+
     def read_ref_freq(self):
         """reads the reference frequency in Hz"""
         return float(self.inst.query('FRAQ?'))
 
-    ref_freq = property(read_ref_freq,doc='reads reference frequency in Hz')
+    def set_ref_freq(self,freq):
+        """sets the reference frequency in Hz"""
+        # reference mode must be internal (1) to set ref
+        if self.ref_mode == 0:
+            self.ref_mode = 1
+        self.inst.write('FREQ {}'.format(freq))
+
+    ref_freq = property(read_ref_freq,set_ref_freq, doc='reads reference
+frequency in Hz')
 
     def read_ch1(self):
         """reads channel 1 output"""
