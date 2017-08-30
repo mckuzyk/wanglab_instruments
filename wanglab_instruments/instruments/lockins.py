@@ -27,8 +27,7 @@ class SR844(object):
             self.ref_mode = 1
         self.inst.write('FREQ {}'.format(freq))
 
-    ref_freq = property(read_ref_freq,set_ref_freq, doc='reads reference
-frequency in Hz')
+    ref_freq = property(read_ref_freq,set_ref_freq, doc='reads reference frequency in Hz')
 
     def read_ch1(self):
         """reads channel 1 output"""
