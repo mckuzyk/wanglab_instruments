@@ -63,6 +63,20 @@ def lorentzian_triplet(x,x0=0,y0=0,amp=1,fwhm=.2,
            lorentzian(x,x0,0,amp,fwhm) + \
            lorentzian(x,xr,0,ampr,fwhmr) 
 
+def optical_doublet(d,k0,kex,gamma):
+    '''
+    optical_dobulet(d, d0, k0, kex, gamma)
+
+    Optical transmission lineshape when CW and CCW modes couple.
+    gamma is the frequency splitting of the two modes.
+    '''
+    k = k0 + kex
+    den = 0.5*k - 1.j*d + 0.25*gamma**2/(0.5*k - 1.j*d)
+    return np.abs(1 - kex/den)**2
+
+def optical_doublet_fit(d,d0,off,amp,k0,kex,gamma):
+    return off + amp*optical_doublet(d-d0,k0,kex,gamma)
+
 def line(x,m=1,b=0):
     """
     line(x, m, b)
@@ -184,7 +198,10 @@ if __name__ == '__main__':
     y1 = lorentzian_triplet(x,*vals)
     popt, pcov = fit_lorentzian_triplet(x,y1)
     print(popt)
+    plt.figure()
     plt.plot(x,y1)
     plt.plot(x,lorentzian_triplet(x,*popt),linewidth=1)
+    plt.figure()
+    plt.plot(x,optical_doublet(x,.1,.05,.2))
     plt.show()
     
