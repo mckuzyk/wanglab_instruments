@@ -164,6 +164,13 @@ def calibrate_x(x,y,eom_frequency,invert=False):
     xcal = (x - x0)/(xr - xl)*2*eom_frequency
     return xcal
 
+def normalize_transmission_dip(x,y,baseline):
+    popt, pcov = fit_lorentzian(x,-y)
+    ymax = -1*popt[1]
+    ymin = np.average(baseline)
+    ynorm = -1*(y - ymax)/(ymax - ymin)
+    return ynorm
+
 def get_linewidth(x,y,eom_frequency,invert=True):
     xcal = calibrate_x(x,y,eom_frequency,invert)
     popt, pcov = fit_lorentzian(xcal,y,x0=0) # Central peak at x=0 
