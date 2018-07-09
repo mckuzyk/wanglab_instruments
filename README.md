@@ -74,7 +74,7 @@ be run as follows:
 # Collect data
 >>> drive_frequency = np.linspace(90,110,500)
 >>> response = np.zeros(len(drive_frequency))
->>>     for i in range(len(drive_frequency)):
+>>> for i in range(len(drive_frequency)):
 >>>     hp.frequency = drive_frequency[i]
 >>>     x,y = rsa.read_spectrum(trace=1)
 >>>     response[i] = np.max(y)
