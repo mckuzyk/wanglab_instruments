@@ -96,6 +96,18 @@ def line(x,m=1,b=0):
     """
     return m*x + b
 
+def K():
+    '''
+    K()
+
+    Transduction coefficient that realates power spectral density for direct
+    detection through a cavity to the spectral density of the phase noise
+    generating the signal.
+
+    In other words, S_{PP}(\omega) = K(\omega) \cdot S_{\phi\phi}(\omega).
+    '''
+    pass
+
 ###################### Fitting ###############################
 
 def fit_lorentzian(x_data, y_data, x0=None, y0=None, amp=None, fwhm=None):
