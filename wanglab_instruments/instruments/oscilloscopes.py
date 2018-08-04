@@ -102,15 +102,15 @@ class Tek3034(object):
         self.inst.write('DAT:SART 1')
         self.inst.write('DAT:STOP 10000')
         raw=np.array(self.inst.query_ascii_values('CURV?'))
-        ymult=float(self.inst.ask('WFMP:YMULT?'))
-        yoff=float(self.inst.ask('WFMP:YOFF?'))
-        yzero=float(self.inst.ask('WFMP:YZERO?'))
+        ymult=float(self.inst.query('WFMP:YMULT?'))
+        yoff=float(self.inst.query('WFMP:YOFF?'))
+        yzero=float(self.inst.query('WFMP:YZERO?'))
         if offset is True:
             y=(raw)*ymult + yzero
         else:
             y=(raw-yoff)*ymult + yzero
-        xinc=float(self.inst.ask('WFMP:XINC?'))
-        xzero=float(self.inst.ask('WFMP:XZERO?'))
-        pts=int(self.inst.ask('WFMP:NR_PT?'))
+        xinc=float(self.inst.query('WFMP:XINC?'))
+        xzero=float(self.inst.query('WFMP:XZERO?'))
+        pts=int(self.inst.query('WFMP:NR_PT?'))
         x=np.linspace(xzero,xzero+pts*xinc,pts)
         return x,y
