@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 def print_status(step, num_steps, width = 50):
 	progress = int(step*width/num_steps)
 	percent_done = int(step*100/num_steps)
