@@ -7,6 +7,14 @@ def save_xy(x_data, y_data, save_to = '', time_stamp = True, plot = True):
 	# x_data: numpy array of x-axis
 	# y_data: either numpy array of single y-data, or list of multiple numpy
 	# arrays of y-data
+	# When save_to is empty, saved data will be named by the time_stamp. 
+
+	if save_to == '' and not time_stamp:
+		message = (' save_xy(x_data, y_data, save_to = \'\', '
+			+ 'time_stamp = True, plot = True)\n'
+			+ '      --->  '
+			+ 'Empty save_to and time_stamp = False.  Nothing to name file.')
+		raise Exception(message)
 
 	if type(y_data).__name__ == 'list':	
 		if plot:
@@ -48,4 +56,4 @@ def save_text(save_to, text):
 if __name__ == '__main__':
 	x = np.linspace(0,1,1000)
 	y = x**2
-	save_xy(x,y)
+	save_xy(x,y,time_stamp = False)
