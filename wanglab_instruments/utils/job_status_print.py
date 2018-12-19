@@ -1,4 +1,5 @@
 from __future__ import print_function
+import time
 
 def print_status(step, num_steps, width = 50):
 	progress = int(step*width/num_steps)

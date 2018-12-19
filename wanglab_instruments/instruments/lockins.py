@@ -18,7 +18,7 @@ class SR844(object):
 
     def read_ref_freq(self):
         """reads the reference frequency in Hz"""
-        return float(self.inst.query('FRAQ?'))
+        return float(self.inst.query('FREQ?'))
 
     def set_ref_freq(self,freq):
         """sets the reference frequency in Hz"""
