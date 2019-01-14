@@ -1,95 +1,95 @@
 import numpy as np
 
 class LecroyWaverunner(object):
-	def __init__(self, inst):
-		self.inst = inst
-		self.inst.write('comm_format def9,word,bin')
-		self.preamble = 21 # bytes in waveform preamble
+    def __init__(self, inst):
+        self.inst = inst
+        self.inst.write('comm_format def9,word,bin')
+        self.preamble = 21 # bytes in waveform preamble
 
-	def __repr__(self):
+    def __repr__(self):
         return 'LecroyWaverunner({!r})'.format(self.inst)
 
-	def catBytes(self, byteSequence):
-		numBytes = len(byteSequence)
-		maxVal = 2**(8*numBytes-1) - 1
-		unsignedInt = 0
-		byteVals = [int(i) for i in byteSequence]
-		index = 0
-		for i in byteVals[::-1]:
-			unsignedInt += i*256**index
-			index += 1
-		return unsignedInt
-	
-	def getFloat(self, waveform, startByte):	
-		b0 = format(int(waveform[startByte]), '#010b')[2::]
-		b1 = format(int(waveform[startByte + 1]), '#010b')[2::]
-		b2 = format(int(waveform[startByte + 2]), '#010b')[2::]
-		b3 = format(int(waveform[startByte + 3]), '#010b')[2::]
-		s = int(b0[0], 2)
-		e = int(b0[1::] + b1[0], 2)
-		f = int(b1[1::] + b2 + b3, 2)
+    def catBytes(self, byteSequence):
+        numBytes = len(byteSequence)
+        maxVal = 2**(8*numBytes-1) - 1
+        unsignedInt = 0
+        byteVals = [int(i) for i in byteSequence]
+        index = 0
+        for i in byteVals[::-1]:
+            unsignedInt += i*256**index
+            index += 1
+        return unsignedInt
+    
+    def getFloat(self, waveform, startByte):    
+        b0 = format(int(waveform[startByte]), '#010b')[2::]
+        b1 = format(int(waveform[startByte + 1]), '#010b')[2::]
+        b2 = format(int(waveform[startByte + 2]), '#010b')[2::]
+        b3 = format(int(waveform[startByte + 3]), '#010b')[2::]
+        s = int(b0[0], 2)
+        e = int(b0[1::] + b1[0], 2)
+        f = int(b1[1::] + b2 + b3, 2)
 
-		frac = 1 + f*10**(-1*len(str(f)))
-		exp = 2**(e-127)
+        frac = 1 + f*10**(-1*len(str(f)))
+        exp = 2**(e-127)
 
-		return (-1)**s * exp * frac
+        return (-1)**s * exp * frac
 
-	def catBytesSigned(self, byteSequence):
-		numBytes = len(byteSequence)
-		maxVal = 2**(8*numBytes-1) - 1
-		unsignedVal = 0
-		signedVal = 0
-		byteVals = [int(i) for i in byteSequence]
-		index = 0
-		for i in byteVals[::-1]:
-			unsignedVal += i*256**index
-			index += 1
-		if unsignedVal > maxVal:
-			signedVal = unsignedVal - 2**(8*numBytes)
-		else:
-			signedVal = unsignedVal
-		return signedVal
+    def catBytesSigned(self, byteSequence):
+        numBytes = len(byteSequence)
+        maxVal = 2**(8*numBytes-1) - 1
+        unsignedVal = 0
+        signedVal = 0
+        byteVals = [int(i) for i in byteSequence]
+        index = 0
+        for i in byteVals[::-1]:
+            unsignedVal += i*256**index
+            index += 1
+        if unsignedVal > maxVal:
+            signedVal = unsignedVal - 2**(8*numBytes)
+        else:
+            signedVal = unsignedVal
+        return signedVal
 
-	def getDatArrayLength(self, waveform, byteLocation=60+self.preamble):
-		return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
+    def getDatArrayLength(self, waveform, byteLocation=60+self.preamble):
+        return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
 
-	def getNumDataPoints(self, waveform, byteLocation=116+self.preamble):
-		return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
+    def getNumDataPoints(self, waveform, byteLocation=116+self.preamble):
+        return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
 
-	def getLenDescriptor(self, waveform, byteLocation=36+self.preamble):
-		return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
+    def getLenDescriptor(self, waveform, byteLocation=36+self.preamble):
+        return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
 
-	def getVerticalGain(self, waveform, byteLocation=156+self.preamble):
-		return self.getFloat(waveform, byteLocation)
+    def getVerticalGain(self, waveform, byteLocation=156+self.preamble):
+        return self.getFloat(waveform, byteLocation)
 
-	def getVerticalOffset(self, waveform, byteLocation=160+self.preamble):
-		return self.getFloat(waveform, byteLocation)
+    def getVerticalOffset(self, waveform, byteLocation=160+self.preamble):
+        return self.getFloat(waveform, byteLocation)
 
-	def getHorizontalInterval(self, waveform, byteLocation=176+self.preamble):
-		return self.getFloat(waveform, byteLocation)
+    def getHorizontalInterval(self, waveform, byteLocation=176+self.preamble):
+        return self.getFloat(waveform, byteLocation)
 
-	def get_waveform(self, channel):
-		waveform = self.inst.query('c{}:waveform?'.format(channel))
-		return waveform
+    def get_waveform(self, channel):
+        waveform = self.inst.query('c{}:waveform?'.format(channel))
+        return waveform
 
-	def format_waveform(self, waveform):
-		LenDesc = self.getLenDescriptor(waveform)
-		NumDatPoints = self.getNumDataPoints(waveform)
-		DatArrayLength = self.getDatArrayLength(waveform)
-		dataBytes = int(DatArrayLength/NumDataPoints)
-		wavArray = []
-		for i in range(LenDesc+self.preamble, len(waveform), 2):
-			wavArray.append(catBytesSigned(waveform[i:i+dataBytes]))
-		vertGain = self.getVerticalGain(waveform)
-		vertOff = self.getVerticalOffset(waveform)
-		horInt = self.getHorizonatlInterval(waveform)
+    def format_waveform(self, waveform):
+        LenDesc = self.getLenDescriptor(waveform)
+        NumDatPoints = self.getNumDataPoints(waveform)
+        DatArrayLength = self.getDatArrayLength(waveform)
+        dataBytes = int(DatArrayLength/NumDataPoints)
+        wavArray = []
+        for i in range(LenDesc+self.preamble, len(waveform), 2):
+            wavArray.append(catBytesSigned(waveform[i:i+dataBytes]))
+        vertGain = self.getVerticalGain(waveform)
+        vertOff = self.getVerticalOffset(waveform)
+        horInt = self.getHorizonatlInterval(waveform)
 
-		t = np.linspace(0,len(wavArray)*horInt, len(wavArray))
-		y = np.array(wavArray)*vertGain - vertOff
+        t = np.linspace(0,len(wavArray)*horInt, len(wavArray))
+        y = np.array(wavArray)*vertGain - vertOff
 
-		return t, y
+        return t, y
 
-		
+        
 
 class Tek7104(object):
     """Initialize Tek7104 class object
