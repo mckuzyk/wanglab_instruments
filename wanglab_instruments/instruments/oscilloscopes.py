@@ -50,22 +50,28 @@ class LecroyWaverunner(object):
             signedVal = unsignedVal
         return signedVal
 
-    def getDatArrayLength(self, waveform, byteLocation=60+self.preamble):
-        return catBytesSigned(waveform[byteLocation:byteLocation+4])
-
-    def getNumDataPoints(self, waveform, byteLocation=116+self.preamble):
+    def getDatArrayLength(self, waveform, byteLocation=60):
+        byteLocation += self.preamble
         return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
 
-    def getLenDescriptor(self, waveform, byteLocation=36+self.preamble):
+    def getNumDataPoints(self, waveform, byteLocation=116):
+        byteLocation += self.preamble
         return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
 
-    def getVerticalGain(self, waveform, byteLocation=156+self.preamble):
+    def getLenDescriptor(self, waveform, byteLocation=36):
+        byteLocation += self.preamble
+        return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
+
+    def getVerticalGain(self, waveform, byteLocation=156):
+        byteLocation += self.preamble
         return self.getFloat(waveform, byteLocation)
 
-    def getVerticalOffset(self, waveform, byteLocation=160+self.preamble):
+    def getVerticalOffset(self, waveform, byteLocation=160):
+        byteLocation += self.preamble
         return self.getFloat(waveform, byteLocation)
 
-    def getHorizontalInterval(self, waveform, byteLocation=176+self.preamble):
+    def getHorizontalInterval(self, waveform, byteLocation=176):
+        byteLocation += self.preamble
         return self.getFloat(waveform, byteLocation)
 
     def get_waveform(self, channel):
