@@ -51,7 +51,7 @@ class LecroyWaverunner(object):
         return signedVal
 
     def getDatArrayLength(self, waveform, byteLocation=60+self.preamble):
-        return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
+        return catBytesSigned(waveform[byteLocation:byteLocation+4])
 
     def getNumDataPoints(self, waveform, byteLocation=116+self.preamble):
         return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
