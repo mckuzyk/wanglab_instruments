@@ -80,15 +80,15 @@ class LecroyWaverunner(object):
 
     def format_waveform(self, waveform):
         LenDesc = self.getLenDescriptor(waveform)
-        NumDatPoints = self.getNumDataPoints(waveform)
+        NumDataPoints = self.getNumDataPoints(waveform)
         DatArrayLength = self.getDatArrayLength(waveform)
         dataBytes = int(DatArrayLength/NumDataPoints)
         wavArray = []
         for i in range(LenDesc+self.preamble, len(waveform), 2):
-            wavArray.append(catBytesSigned(waveform[i:i+dataBytes]))
+            wavArray.append(self.catBytesSigned(waveform[i:i+dataBytes]))
         vertGain = self.getVerticalGain(waveform)
         vertOff = self.getVerticalOffset(waveform)
-        horInt = self.getHorizonatlInterval(waveform)
+        horInt = self.getHorizontalInterval(waveform)
 
         t = np.linspace(0,len(wavArray)*horInt, len(wavArray))
         y = np.array(wavArray)*vertGain - vertOff
