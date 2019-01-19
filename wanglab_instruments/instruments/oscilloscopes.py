@@ -9,22 +9,22 @@ class LecroyWaverunner(object):
     def __repr__(self):
         return 'LecroyWaverunner({!r})'.format(self.inst)
 
-    def catBytes(self, byteSequence):
-        numBytes = len(byteSequence)
-        maxVal = 2**(8*numBytes-1) - 1
-        unsignedInt = 0
-        byteVals = [int(i) for i in byteSequence]
+    def cat_bytes(self, byte_sequence):
+        num_bytes = len(byte_sequence)
+        max_val = 2**(8*num_bytes-1) - 1
+        unsigned_int = 0
+        byte_vals = [int(i) for i in byte_sequence]
         index = 0
-        for i in byteVals[::-1]:
-            unsignedInt += i*256**index
+        for i in byte_vals[::-1]:
+            unsigned_int += i*256**index
             index += 1
-        return unsignedInt
+        return unsigned_int
     
-    def getFloat(self, waveform, startByte):    
-        b0 = format(int(waveform[startByte]), '#010b')[2::]
-        b1 = format(int(waveform[startByte + 1]), '#010b')[2::]
-        b2 = format(int(waveform[startByte + 2]), '#010b')[2::]
-        b3 = format(int(waveform[startByte + 3]), '#010b')[2::]
+    def get_float(self, waveform, start_byte):    
+        b0 = format(int(waveform[start_byte]), '#010b')[2::]
+        b1 = format(int(waveform[start_byte + 1]), '#010b')[2::]
+        b2 = format(int(waveform[start_byte + 2]), '#010b')[2::]
+        b3 = format(int(waveform[start_byte + 3]), '#010b')[2::]
         s = int(b0[0], 2)
         e = int(b0[1::] + b1[0], 2)
         f = int(b1[1::] + b2 + b3, 2)
@@ -34,64 +34,64 @@ class LecroyWaverunner(object):
 
         return (-1)**s * exp * frac
 
-    def catBytesSigned(self, byteSequence):
-        numBytes = len(byteSequence)
-        maxVal = 2**(8*numBytes-1) - 1
-        unsignedVal = 0
-        signedVal = 0
-        byteVals = [int(i) for i in byteSequence]
+    def cat_bytes_signed(self, byte_sequence):
+        num_bytes = len(byte_sequence)
+        max_val = 2**(8*num_bytes-1) - 1
+        unsigned_val = 0
+        signed_val = 0
+        byte_vals = [int(i) for i in byte_sequence]
         index = 0
-        for i in byteVals[::-1]:
-            unsignedVal += i*256**index
+        for i in byte_vals[::-1]:
+            unsigned_val += i*256**index
             index += 1
-        if unsignedVal > maxVal:
-            signedVal = unsignedVal - 2**(8*numBytes)
+        if unsigned_val > max_val:
+            signed_val = unsigned_val - 2**(8*num_bytes)
         else:
-            signedVal = unsignedVal
-        return signedVal
+            signed_val = unsigned_val
+        return signed_val
 
-    def getDatArrayLength(self, waveform, byteLocation=60):
-        byteLocation += self.preamble
-        return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
+    def get_dat_array_length(self, waveform, byte_location=60):
+        byte_location += self.preamble
+        return self.cat_bytes_signed(waveform[byte_location:byte_location+4])
 
-    def getNumDataPoints(self, waveform, byteLocation=116):
-        byteLocation += self.preamble
-        return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
+    def get_num_data_points(self, waveform, byte_location=116):
+        byte_location += self.preamble
+        return self.cat_bytes_signed(waveform[byte_location:byte_location+4])
 
-    def getLenDescriptor(self, waveform, byteLocation=36):
-        byteLocation += self.preamble
-        return self.catBytesSigned(waveform[byteLocation:byteLocation+4])
+    def get_len_descriptor(self, waveform, byte_location=36):
+        byte_location += self.preamble
+        return self.cat_bytes_signed(waveform[byte_location:byte_location+4])
 
-    def getVerticalGain(self, waveform, byteLocation=156):
-        byteLocation += self.preamble
-        return self.getFloat(waveform, byteLocation)
+    def get_vertical_gain(self, waveform, byte_location=156):
+        byte_location += self.preamble
+        return self.get_float(waveform, byte_location)
 
-    def getVerticalOffset(self, waveform, byteLocation=160):
-        byteLocation += self.preamble
-        return self.getFloat(waveform, byteLocation)
+    def get_vertical_offset(self, waveform, byte_location=160):
+        byte_location += self.preamble
+        return self.get_float(waveform, byte_location)
 
-    def getHorizontalInterval(self, waveform, byteLocation=176):
-        byteLocation += self.preamble
-        return self.getFloat(waveform, byteLocation)
+    def get_horizontal_interval(self, waveform, byte_location=176):
+        byte_location += self.preamble
+        return self.get_float(waveform, byte_location)
 
     def get_waveform(self, channel):
         waveform = self.inst.query('c{}:waveform?'.format(channel))
         return waveform
 
     def format_waveform(self, waveform):
-        LenDesc = self.getLenDescriptor(waveform)
-        NumDataPoints = self.getNumDataPoints(waveform)
-        DatArrayLength = self.getDatArrayLength(waveform)
-        dataBytes = int(DatArrayLength/NumDataPoints)
-        wavArray = []
-        for i in range(LenDesc+self.preamble, len(waveform), 2):
-            wavArray.append(self.catBytesSigned(waveform[i:i+dataBytes]))
-        vertGain = self.getVerticalGain(waveform)
-        vertOff = self.getVerticalOffset(waveform)
-        horInt = self.getHorizontalInterval(waveform)
+        len_desc = self.get_len_descriptor(waveform)
+        num_data_points = self.get_num_data_points(waveform)
+        dat_array_length = self.get_dat_array_length(waveform)
+        data_bytes = int(dat_array_length/num_data_points)
+        wav_array = []
+        for i in range(len_desc+self.preamble, len(waveform), 2):
+            wav_array.append(self.cat_bytes_signed(waveform[i:i+data_bytes]))
+        vert_gain = self.get_vertical_gain(waveform)
+        vert_off = self.get_vertical_offset(waveform)
+        hor_int = self.get_horizontal_interval(waveform)
 
-        t = np.linspace(0,len(wavArray)*horInt, len(wavArray))
-        y = np.array(wavArray)*vertGain - vertOff
+        t = np.linspace(0,len(wavarray)*hor_int, len(wav_array))
+        y = np.array(wav_array)*vert_gain - vert_off
 
         return t, y
 
