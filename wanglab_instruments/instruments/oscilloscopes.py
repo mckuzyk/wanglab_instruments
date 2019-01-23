@@ -74,6 +74,14 @@ class LecroyWaverunner(object):
         byte_location += self.preamble
         return self.get_float(waveform, byte_location)
 
+    def get_first_valid_point(self, waveform, byte_location=124):
+        byte_location += self.preamble
+        return self.cat_bytes_signed(waveform[byte_location:byte_location+4])
+
+    def get_last_valid_point(self, waveform, byte_location=128):
+        byte_location += self.preamble
+        return self.cat_bytes_signed(waveform[byte_location:byte_location+4])
+
     def get_waveform(self, channel):
         waveform = self.inst.query('c{}:waveform?'.format(channel))
         return waveform
