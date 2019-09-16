@@ -161,6 +161,23 @@ class Tek7104(object):
             y=[float(val)*float(result[13]) for val in result[17].split(',')]
         return np.array(x),np.array(y) #x,y
 
+class RigolDS2102(object):
+
+    def __init__(self, inst):
+        self.inst = inst
+
+    def __repr__(self):
+        return 'RigolDS2102({!r})'.format(self.inst)
+
+    def fetch_spectrum(self, trace = 1):
+        self.inst.write(':WAV:SOURce CHAN{}'.format(trace))
+        self.inst.write(':WAV:FORMAT ASCII')
+        x_inc = float(self.inst.query(':WAV:XINC?'))
+        y = self.inst.query_ascii_values(':WAV:DATA?')
+        x = np.linspace(0, x_inc*len(y), len(y))
+        return x, y
+    
+
 class Tek3034(object):
     """Initialize Tek3034 class object
 
