@@ -91,7 +91,9 @@ class KeysightPXA(object):
 
     def fetch_spectrum(self, trace):
         y = self.fetch_spectrum_trace(trace)
-        x = np.linspace(self.start_freq, self.stop_freq, len(y))
+        x0 = self.start_freq
+        xf = self.stop_freq
+        x = np.linspace(x0, xf, len(y))
         return x, y
 
 class Tek5103(object):
