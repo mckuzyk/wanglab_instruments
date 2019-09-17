@@ -42,7 +42,7 @@ class KeysightPXA(object):
             unit = self.freq_unit
         self.inst.write('FREQ:CENTER {}{}'.format(freq,unit))
 
-    def get_center_freq(self, freq, unit=None):
+    def get_center_freq(self, unit=None):
         if unit is None:
             unit = self.freq_unit
         return float(self.inst.query('FREQ:CENTER?'))/self.frequencies[unit]
@@ -54,7 +54,7 @@ class KeysightPXA(object):
             unit = self.freq_unit
         self.inst.write('FREQ:START {}{}'.format(freq,unit))
 
-    def get_start_freq(self, freq, unit=None):
+    def get_start_freq(self, unit=None):
         if unit is None:
             unit = self.freq_unit
         return float(self.inst.query('FREQ:START?'))/self.frequencies[unit]
@@ -66,7 +66,7 @@ class KeysightPXA(object):
             unit = self.freq_unit
         self.inst.write('FREQ:STOP {}{}'.format(freq,unit))
 
-    def get_stop_freq(self, freq, unit=None):
+    def get_stop_freq(self, unit=None):
         if unit is None:
             unit = self.freq_unit
         return float(self.inst.query('FREQ:STOP?'))/self.frequencies[unit]
@@ -78,7 +78,7 @@ class KeysightPXA(object):
             unit = self.freq_unit
         self.inst.write('FREQ:SPAN {}{}'.format(freq,unit))
 
-    def get_freq_span(self, freq, unit=None):
+    def get_freq_span(self, unit=None):
         if unit is None:
             unit = self.freq_unit
         return float(self.inst.query('FREQ:SPAN?'))/self.frequencies[unit]
