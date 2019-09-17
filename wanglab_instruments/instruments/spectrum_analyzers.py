@@ -47,6 +47,8 @@ class KeysightPXA(object):
             unit = self.freq_unit
         return float(self.inst.query('FREQ:CENTER?'))/self.frequencies[unit]
 
+    center_freq = property(get_center_freq, set_center_freq)
+
     def set_start_freq(self, freq, unit=None):
         if unit is None:
             unit = self.freq_unit
@@ -56,6 +58,8 @@ class KeysightPXA(object):
         if unit is None:
             unit = self.freq_unit
         return float(self.inst.query('FREQ:START?'))/self.frequencies[unit]
+
+    start_freq = property(get_start_freq, set_start_freq)
 
     def set_stop_freq(self, freq, unit=None):
         if unit is None:
@@ -67,6 +71,8 @@ class KeysightPXA(object):
             unit = self.freq_unit
         return float(self.inst.query('FREQ:STOP?'))/self.frequencies[unit]
 
+    stop_freq  = property(get_stop_freq, set_stop_freq)
+
     def set_freq_span(self, freq, unit=None):
         if unit is None:
             unit = self.freq_unit
@@ -76,6 +82,8 @@ class KeysightPXA(object):
         if unit is None:
             unit = self.freq_unit
         return float(self.inst.query('FREQ:SPAN?'))/self.frequencies[unit]
+
+    freq_span  = property(get_freq_span, set_freq_span)
 
     def fetch_spectrum_trace(self, trace):
         y = self.inst.query_ascii_values(':TRACE? TRACE{}'.format(trace))
