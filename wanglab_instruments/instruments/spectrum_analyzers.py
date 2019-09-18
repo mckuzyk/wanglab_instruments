@@ -11,6 +11,92 @@ def prop_doc(var):
 def timestamp():
     return datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
 
+def AgilentESA(object):
+
+    frequencies={'Hz':1.,'kHz':1000.,'MHz':1000000.,'GHz':1000000000.}
+
+    def __init__(self, inst, freq_unit = 'MHz'):
+        self.inst = inst
+        self.inst.write(':FORMat:TRACE:DATA ASCii')
+        self._freq_unit = freq_unit
+
+    def  __repr__(self):
+        return 'KeysightPXA({!r})'.format(self.inst)
+
+    def get_freq_unit(self):
+        return self._freq_unit
+
+    def set_freq_unit(self, freq):
+        if freq in self.frequencies.keys():
+            self._freq_unit = freq
+        else:
+            if type(freq) == str:
+                raise ValueError('freq_unit = { GHz | MHz | kHz | Hz }')
+            else:
+                raise TypeError('freq_unit must be str')
+
+    freq_unit = property(get_freq_unit, set_freq_unit)
+
+    def set_center_freq(self, freq, unit=None):
+        if unit is None:
+            unit = self.freq_unit
+        self.inst.write('FREQ:CENTER {}{}'.format(freq,unit))
+
+    def get_center_freq(self, unit=None):
+        if unit is None:
+            unit = self.freq_unit
+        return float(self.inst.query('FREQ:CENTER?'))/self.frequencies[unit]
+
+    center_freq = property(get_center_freq, set_center_freq)
+
+    def set_start_freq(self, freq, unit=None):
+        if unit is None:
+            unit = self.freq_unit
+        self.inst.write('FREQ:START {}{}'.format(freq,unit))
+
+    def get_start_freq(self, unit=None):
+        if unit is None:
+            unit = self.freq_unit
+        return float(self.inst.query('FREQ:START?'))/self.frequencies[unit]
+
+    start_freq = property(get_start_freq, set_start_freq)
+
+    def set_stop_freq(self, freq, unit=None):
+        if unit is None:
+            unit = self.freq_unit
+        self.inst.write('FREQ:STOP {}{}'.format(freq,unit))
+
+    def get_stop_freq(self, unit=None):
+        if unit is None:
+            unit = self.freq_unit
+        return float(self.inst.query('FREQ:STOP?'))/self.frequencies[unit]
+
+    stop_freq  = property(get_stop_freq, set_stop_freq)
+
+    def set_freq_span(self, freq, unit=None):
+        if unit is None:
+            unit = self.freq_unit
+        self.inst.write('FREQ:SPAN {}{}'.format(freq,unit))
+
+    def get_freq_span(self, unit=None):
+        if unit is None:
+            unit = self.freq_unit
+        return float(self.inst.query('FREQ:SPAN?'))/self.frequencies[unit]
+
+    freq_span  = property(get_freq_span, set_freq_span)
+
+    def fetch_spectrum_trace(self, trace):
+        y = self.inst.query_ascii_values(':TRACE? TRACE{}'.format(trace))
+        return y
+
+    def fetch_spectrum(self, trace):
+        y = self.fetch_spectrum_trace(trace)
+        x0 = self.start_freq
+        xf = self.stop_freq
+        x = np.linspace(x0, xf, len(y))
+        return x, y
+
+
 class KeysightPXA(object):
 
     frequencies={'Hz':1.,'kHz':1000.,'MHz':1000000.,'GHz':1000000000.}
