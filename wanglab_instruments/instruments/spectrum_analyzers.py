@@ -11,7 +11,7 @@ def prop_doc(var):
 def timestamp():
     return datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
 
-def AgilentESA(object):
+class AgilentESA(object):
 
     frequencies={'Hz':1.,'kHz':1000.,'MHz':1000000.,'GHz':1000000000.}
 
