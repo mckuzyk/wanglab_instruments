@@ -122,6 +122,14 @@ def fit_lorentzian(x_data, y_data, x0=None, y0=None, amp=None, fwhm=None):
     popt, pcov = curve_fit(lorentzian, x_data, y_data, [x0,y0,amp,fwhm])
     return popt, pcov
 
+def print_lorentzian_fit(popt, units=('','','','')):
+    fit_params = ('x0', 'y0', 'amplitude', 'fwhm')
+    s = ''
+    for i in range(len(popt)):
+        s += '{}: {} {}\n'.format(fit_params[i], popt[i], units[i])
+    print(s)
+    return s
+
 def fit_lorentzian_triplet(x_data, y_data, x0=None, y0=None, amp=None,
     fwhm=None, xl=None, ampl=None, fwhml=None,
     xr=None, ampr=None,fwhmr=None):
@@ -215,5 +223,12 @@ if __name__ == '__main__':
     plt.plot(x,lorentzian_triplet(x,*popt),linewidth=1)
     plt.figure()
     plt.plot(x,optical_doublet(x,.1,.05,.2))
+    y2 = lorentzian(x, vals[0], vals[1], vals[2], vals[3])
+    popt2, pcov2 = fit_lorentzian(x, y2)
+    print_lorentzian_fit(popt2, ('MHz', 'V', 'V', 'MHz'))
+    plt.figure()
+    plt.plot(x,y2)
+    plt.plot(x,lorentzian(x, *popt2))
+
     plt.show()
     
