@@ -176,7 +176,7 @@ class RigolDS2102(object):
         x_0 = float(self.inst.query(':WAV:XREF?'))
         y = self.inst.query_ascii_values(':WAV:DATA?')
         x = np.linspace(x_0, x_0 + x_inc*len(y), len(y))
-        return x, y
+        return x, np.array(y)
     
 
 class Tek3034(object):
