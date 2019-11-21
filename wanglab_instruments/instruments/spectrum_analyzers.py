@@ -21,7 +21,7 @@ class AgilentESA(object):
         self._freq_unit = freq_unit
 
     def  __repr__(self):
-        return 'KeysightPXA({!r})'.format(self.inst)
+        return 'AgilentESA({!r})'.format(self.inst)
 
     def get_freq_unit(self):
         return self._freq_unit
@@ -184,9 +184,12 @@ class KeysightPXA(object):
 
     def fetch_phasenoise(self, trace):
         _y = self.inst.query_ascii_values(':FETCH:LPLOT{}?'.format(trace+2))
+        _meta = self.inst.query_ascii_values(':FETCH:LPLOT1?')
+        meta = {'carrier_power': '{} dBm'.format(_meta[0]),
+        'carrier_frequency': '{} Hz'.format(_meta[1])}
         x = _y[0:-2:2]
         y = _y[1:-1:2]
-        return x, y
+        return x, y, meta
 
 class Tek5103(object):
     """
