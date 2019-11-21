@@ -182,6 +182,12 @@ class KeysightPXA(object):
         x = np.linspace(x0, xf, len(y))
         return x, y
 
+    def fetch_phasenoise(self, trace):
+        _y = self.inst.query_ascii_values(':FETCH:LPLOT{}?'.format(trace+2))
+        x = _y[0:-2:2]
+        y = _y[1:-1:2]
+        return x, y
+
 class Tek5103(object):
     """
     Initialize Tek5103 class object
