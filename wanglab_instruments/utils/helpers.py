@@ -111,7 +111,7 @@ def K():
 ###################### Fitting ###############################
 
 def fit_lorentzian(x_data, y_data, x0=None, y0=None, amp=None, fwhm=None,
-        bounds=None):
+        bounds=(-np.inf, np.inf)):
     if x0 is None:
         x0 = x_data[np.argmax(y_data)]
     if y0 is None:
