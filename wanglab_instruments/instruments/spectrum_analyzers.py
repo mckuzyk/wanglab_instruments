@@ -123,6 +123,9 @@ class KeysightPXA(object):
 
     freq_unit = property(get_freq_unit, set_freq_unit)
 
+    def get_bandwidth(self):
+        return float(self.inst.query('BAND?'))
+
     def set_center_freq(self, freq, unit=None):
         if unit is None:
             unit = self.freq_unit
