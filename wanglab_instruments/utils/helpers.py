@@ -134,10 +134,10 @@ def print_lorentzian_fit(popt, units=('','','','')):
 
 def fit_lorentzian_triplet(x_data, y_data, x0=None, y0=None, amp=None,
     fwhm=None, xl=None, ampl=None, fwhml=None,
-    xr=None, ampr=None,fwhmr=None):
+    xr=None, ampr=None,fwhmr=None, inverted=False):
     # If all paramaters are None, assume a large center peak with small,
     # resolved sidebands
-    if not any([x0,y0,amp,fwhm,xl,ampl,fwhml,xr,ampr,fwhmr]):
+    if not any([x0,y0,amp,fwhm,xl,ampl,fwhml,xr,ampr,fwhmr]) and not inverted:
         x0 = x_data[np.argmax(y_data)]
         y0 = np.amin(y_data)
         amp = np.amax(y_data) - np.amin(y_data)
@@ -163,6 +163,26 @@ def fit_lorentzian_triplet(x_data, y_data, x0=None, y0=None, amp=None,
             [_popt[0],_popt[1],_popt[2],_popt[3],
             _poptl[0],_poptl[2],_poptl[3],
             _poptr[0],_poptr[2],_poptr[3]])
+        return popt, pcov
+
+    elif not any([x0,y0,amp,fwhm,xl,ampl,fwhml,xr,ampr,fwhmr]) and inverted:
+        x0 = x_data[y_data==np.min(y_data)][0]
+        y0 = np.max(y_data)
+        amp = np.max(y_data) - np.min(y_data)
+        half_max = y_data < y0 - 0.5*amp
+        fwhm = x_data[half_max][-1] - x_data[half_max][0]
+        left_filt = x_data < x0 - 2*fwhm
+        right_filt = x_data > x0 + 2*fwhm
+        x_datal = x_data[left_filt]
+        x_datar = x_data[right_filt]
+        y_datal = y_data[left_filt]
+        y_datar = y_data[right_filt]
+        xl = x_datal[y_datal==np.min(y_datal)][0]
+        xr = x_datar[y_datar==np.min(y_datar)][0]
+        ampl = np.max(y_datal) - np.min(y_datal)
+        ampr = np.max(y_datar) - np.min(y_datar)
+        popt, pcov = curve_fit(lorentzian_triplet,x_data,y_data,
+            [x0,y0,amp,fwhm,xl,ampl,fwhm,xr,ampr,fwhm])
         return popt, pcov
 
     else:
