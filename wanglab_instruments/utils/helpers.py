@@ -138,31 +138,23 @@ def fit_lorentzian_triplet(x_data, y_data, x0=None, y0=None, amp=None,
     # If all paramaters are None, assume a large center peak with small,
     # resolved sidebands
     if not any([x0,y0,amp,fwhm,xl,ampl,fwhml,xr,ampr,fwhmr]) and not inverted:
-        x0 = x_data[np.argmax(y_data)]
-        y0 = np.amin(y_data)
-        amp = np.amax(y_data) - np.amin(y_data)
-        fwhm = 0.2*np.abs((x_data[-1] - x_data[0]))
-        _popt,_pcov = fit_lorentzian(x_data,y_data,*[x0,y0,amp,fwhm])
-        _x = np.array(x_data)
-        _y = np.array(y_data) - lorentzian(_x,*_popt)
-        _xl_indices = _x < (_popt[0] - 1*np.abs(_popt[-1]))
-        _xr_indices = _x > (_popt[0] + 1*np.abs(_popt[-1]))
-#        _xl_indices = _x < _popt[0]
-#        _xr_indices = _x > _popt[0]
-        _xl = _x[_xl_indices]
-        _xr = _x[_xr_indices]
-        _yl = _y[_xl_indices]
-        _yr = _y[_xr_indices]
-        xl = _xl[np.argmax(_yl)]
-        xr = _xr[np.argmax(_yr)]
-        ampl = np.amax(_yl) - np.amin(_yl)
-        ampr = np.amax(_yr) - np.amin(_yr)
-        _poptr,_pcovr = fit_lorentzian(_xr,_yr,x0=xr,amp=ampr,fwhm=_popt[-1])
-        _poptl,_pcovl = fit_lorentzian(_xl,_yl,x0=xl,amp=ampl,fwhm=_popt[-1])
+        x0 = x_data[y_data==np.max(y_data)][0]
+        y0 = np.min(y_data)
+        amp = np.max(y_data) - np.min(y_data)
+        half_max = y_data > y0 + 0.5*amp
+        fwhm = x_data[half_max][-1] - x_data[half_max][0]
+        left_filt = x_data < x0 - 3.0*fwhm
+        right_filt = x_data > x0 + 3.0*fwhm
+        x_datal = x_data[left_filt]
+        x_datar = x_data[right_filt]
+        y_datal = y_data[left_filt]
+        y_datar = y_data[right_filt]
+        xl = x_datal[y_datal==np.max(y_datal)][0]
+        xr = x_datar[y_datar==np.max(y_datar)][0]
+        ampl = np.max(y_datal) - np.min(y_datal)
+        ampr = np.max(y_datar) - np.min(y_datar)
         popt, pcov = curve_fit(lorentzian_triplet,x_data,y_data,
-            [_popt[0],_popt[1],_popt[2],_popt[3],
-            _poptl[0],_poptl[2],_poptl[3],
-            _poptr[0],_poptr[2],_poptr[3]])
+            [x0,y0,amp,fwhm,xl,ampl,fwhm,xr,ampr,fwhm])
         return popt, pcov
 
     elif not any([x0,y0,amp,fwhm,xl,ampl,fwhml,xr,ampr,fwhmr]) and inverted:
